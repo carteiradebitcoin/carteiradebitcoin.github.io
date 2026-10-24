@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CyberVault - Cofre Criptografado de Senhas</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: #07090e;
+      color: #e2e8f0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding: 16px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 980px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      flex-grow: 1;
+    }
+
+    /* Modal / Tela de Bloqueio */
+    .lock-screen {
+      position: fixed;
+      inset: 0;
+      background-color: #07090e;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .lock-card {
+      background-color: #111726;
+      border: 1px solid #1e293b;
+      border-radius: 16px;
+      padding: 24px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      text-align: center;
+    }
+
+    .lock-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #06b6d4, #2563eb);
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 14px rgba(6, 182, 212, 0.3);
+    }
+
+    .lock-icon svg {
+      width: 24px;
+      height: 24px;
+      stroke: #ffffff;
+      fill: none;
+    }
+
+    .lock-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .lock-desc {
+      font-size: 12px;
+      color: #94a3b8;
+      line-height: 1.4;
+    }
+
+    .input-lock {
+      width: 100%;
+      background-color: #0b0f19;
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      color: #38bdf8;
+      font-family: Consolas, "JetBrains Mono", monospace;
+      font-size: 13px;
+      padding: 10px 14px;
+      outline: none;
+      text-align: center;
+      transition: border-color 0.2s;
+    }
+
+    .input-lock:focus {
+      border-color: #06b6d4;
+    }
+
+    .lock-error {
+      font-size: 11px;
+      color: #f87171;
+      font-family: Consolas, "JetBrains Mono", monospace;
+      min-height: 16px;
+    }
+
+    /* Header */
+    .header-card {
+      background-color: #111726;
+      border: 1px solid #1e293b;
+      border-radius: 14px;
+      padding: 14px 18px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #06b6d4, #2563eb);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 10px rgba(6, 182, 212, 0.3);
+    }
+
+    .brand-icon svg {
+      width: 18px;
+      height: 18px;
+      stroke: #ffffff;
+      fill: none;
+    }
+
+    .brand-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .badge-tag {
+      font-family: Consolas, "JetBrains Mono", monospace;
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background-color: rgba(6, 182, 212, 0.15);
+      border: 1px solid rgba(6, 182, 212, 0.35);
+      color: #38bdf8;
+      text-transform: uppercase;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    /* Botões */
+    .btn {
+      font-family: Consolas, "JetBrains Mono", monospace;
+      font-size: 11px;
+      font-weight: 600;
+      border-radius: 8px;
+      padding: 6px 12px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+      border: 1px solid transparent;
+      text-decoration: none;
+    }
+
+    .btn-secondary {
+      background-color: #1e293b;
+      border-color: #334155;
+      color: #cbd5e1;
+    }
+
+    .btn-secondary:hover {
+      background-color: #334155;
+      color: #ffffff;
+    }
+
+    .btn-primary {
+      background-color: #0284c7;
+      color: #ffffff;
+      box-shadow: 0 2px 8px rgba(2, 132, 199, 0.3);
+    }
+
+    .btn-primary:hover {
+      background-color: #0369a1;
+    }
+
+    .btn-emerald {
+      background-color: rgba(16, 185, 129, 0.15);
+      border-color: rgba(16, 185, 129, 0.4);
+      color: #34d399;
+    }
+
+    .btn-emerald:hover {
+      background-color: #10b981;
+      color: #ffffff;
+    }
+
+    .btn-danger {
+      background-color: rgba(239, 68, 68, 0.12);
+      border-color: rgba(239, 68, 68, 0.35);
+      color: #f87171;
+    }
+
+    .btn-danger:hover {
+      background-color: #ef4444;
+      color: #ffffff;
+    }
+
+    /* Barra de Busca e Filtros */
+    .controls-card {
+      background-color: #111726;
+      border: 1px solid #1e293b;
+      border-radius: 12px;
+      padding: 10px 14px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .search-box {
+      flex: 1;
+      min-width: 220px;
+      position: relative;
+    }
+
+    .search-box input {
+      width: 100%;
+      background-color: #0b0f19;
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      color: #f1f5f9;
+      font-family: Consolas, "JetBrains Mono", monospace;
+      font-size: 12px;
+      padding: 7px 10px 7px 30px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .search-box input:focus {
+      border-color: #06b6d4;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 9px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #64748b;
+      font-size: 12px;
+    }
+
+    .category-pills {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      max-width: 100%;
+      padding-bottom: 2px;
+    }
+
+    .pill {
+      font-family: Consolas, "JetBrains Mono", monospace;
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      background-color: #0b0f19;
+      border: 1px solid #1e293b;
+      color: #94a3b8;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+      user-select: none;
+    }
+
+    .pill:hover {
+      color: #f1f5f9;
+      border-color: #334155;
+    }
+
+    .pill.active {
+      background-color: rgba(6, 182, 212, 0.15);
+      border-color: #06b6d4;
+      color: #38bdf8;
+      font-weight: 600;
+    }
+
+    /* Modal / Form de Adição e Edição */
+    .form-panel {
+      display: none;
+      background-color: #111726;
+      border: 1px solid #06b6d4;
+      border-radius: 12px;
+      padding: 14px;
+      box-shadow: 0 4px 20px rgba(6, 182, 212, 0.15);
+    }
+
+    .form-header {
+      font-family: Consolas, "JetBrains Mono", monospace;
+      font-size: 11px;
+      font-weight: 700;
+      color: #38bdf8;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .form-group label {
+      display: block;
+      font-family: Consolas, "JetBrains Mono", monospace;
+      font-size: 10px;
+      color: #94a3b8;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .form-group input {
+      width: 100%;
+      background-color: #0b0f19;
+      border: 1px solid #1e293b;
+      border-radius: 6px;
+      color: #38bdf8;
+      font-family: Consolas, "JetBrains Mono", monospace;
+      font-size: 12px;
+      padding: 6px 10px;
+      outline: none;
+    }
+
+    .form-group input:focus {
+      border-color: #06b6d4;
+    }
+
+    /* Grid de Itens */
+    .category-section {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .category-title {
+      font-family: Consolas, "JetBrains Mono", monospace;
+      font-size: 11px;
+      font-weight: 700;
+      color: #06b6d4;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding-left: 2px;
+    }
+
+    .category-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background-color: #1e293b;
+      margin-left: 6px;
+    }
+
+    .btn-edit-cat {
+      background: transparent;
+      border: none;
+      color: #475569;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2px 4px;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+
+    .btn-edit-cat:hover {
+      background-color: #1e293b;
+      color: #38bdf8;
+    }
+
+    .bookmarks-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+      gap: 10px;
+    }
+
+    .bookmark-card {
+      background-color: #111726;
+      border: 1px solid #1e293b;
+      border-radius: 10px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 6px;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .bookmark-card:hover {
+      border-color: #38bdf8;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    }
+
+    .bookmark-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .bookmark-title-link {
+      color: #f1f5f9;
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      word-break: break-word;
+    }
+
+    .bookmark-title-link:hover {
+      color: #38bdf8;
+    }
+
+    .bookmark-desc {
+      font-size: 11px;
+      color: #94a3b8;
+      line-height: 1.35;
+      word-break: break-word;
+    }
+
+    .cred-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background-color: #0b0f19;
+      border: 1px solid #1a273b;
+      border-radius: 6px;
+      padding: 3px 8px;
+      font-family: Consolas, "JetBrains Mono", monospace;
+      font-size: 11px;
+      margin-top: 4px;
+    }
+
+    .cred-label {
+      color: #64748b;
+      font-size: 10px;
+      text-transform: uppercase;
+      margin-right: 6px;
+    }
+
+    .cred-value {
+      color: #38bdf8;
+      font-family: Consolas, "JetBrains Mono", monospace;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+    }
+
+    .cred-actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-left: 6px;
+    }
+
+    .btn-cred-mini {
+      background: transparent;
+      border: none;
+      color: #64748b;
+      cursor: pointer;
+      padding: 2px;
+      border-radius: 4px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.2s;
+    }
+
+    .btn-cred-mini:hover {
+      color: #38bdf8;
+    }
+
+    .bookmark-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 4px;
+      padding-top: 6px;
+      border-top: 1px solid #162032;
+    }
+
+    .bookmark-cat {
+      font-family: Consolas, "JetBrains Mono", monospace;
+      font-size: 9px;
+      padding: 1px 6px;
+      border-radius: 4px;
+      background-color: #0b0f19;
+      border: 1px solid #1e293b;
+      color: #64748b;
+      text-transform: uppercase;
+    }
+
+    .card-actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .btn-icon {
+      background: transparent;
+      border: none;
+      color: #64748b;
+      cursor: pointer;
+      padding: 3px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+    }
+
+    .btn-icon:hover {
+      background-color: #1e293b;
+      color: #f1f5f9;
+    }
+
+    .btn-icon.edit:hover {
+      color: #38bdf8;
+    }
+
+    .btn-icon.delete:hover {
+      color: #f87171;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 10px;
+      color: #64748b;
+      font-family: Consolas, "JetBrains Mono", monospace;
+      font-size: 12px;
+    }
+
+    /* Footer */
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid #1e293b;
+      padding-top: 10px;
+      font-size: 11px;
+      color: #64748b;
+      font-family: Consolas, "JetBrains Mono", monospace;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Tela de Desbloqueio (Iniciada se houver cofre cifrado) -->
+  <div id="lockScreen" class="lock-screen" style="display: none;">
+    <div class="lock-card">
+      <div class="lock-icon">
+        <svg viewBox="0 0 24 24">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></rect>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        </svg>
+      </div>
+      <div>
+        <h2 class="lock-title" id="lockTitle">CyberVault Protegido</h2>
+        <p class="lock-desc" id="lockSubtitle">Digite sua Senha Mestra para decifrar os itens</p>
+      </div>
+      <input type="password" id="masterPasswordInput" placeholder="Senha Mestra..." class="input-lock" onkeydown="if(event.key==='Enter') unlockVault()">
+      <div id="lockError" class="lock-error"></div>
+      <button class="btn btn-primary" onclick="unlockVault()" style="width: 100%; justify-content: center; padding: 10px;">
+        🔓 Desbloquear Cofre
+      </button>
+    </div>
+  </div>
+
+  <div class="container" id="mainContainer">
+    
+    <!-- Top Bar -->
+    <header class="header-card">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></rect>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
+        </div>
+        <div class="brand-title">
+          CyberVault <span class="badge-tag">AES-256 Cifrado</span>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button class="btn btn-primary" onclick="openCreateForm()">
+          ➕ <span>Novo Item</span>
+        </button>
+        <button class="btn btn-emerald" onclick="downloadEncryptedHtml()" title="Criptografa com sua senha e baixa o arquivo HTML protegido">
+          💾 <span>Guardar HTML</span>
+        </button>
+        <button class="btn btn-secondary" onclick="lockVault()" title="Trancar imediatamente o cofre em tela">
+          🔒 <span>Trancar</span>
+        </button>
+        <button class="btn btn-danger" onclick="clearAllData()" title="Limpa todos os itens">
+          🗑️ <span>Zerar Tudo</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Formulário de Criação / Edição -->
+    <div id="formPanel" class="form-panel" style="display: none;">
+      <div class="form-header" id="formHeaderTitle"><span>➕ Novo Registro</span></div>
+      <input type="hidden" id="editBookmarkId" value="">
+      
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="linkTitle">Título / Serviço</label>
+          <input type="text" id="linkTitle" placeholder="Ex: ProtonMail, Painel VPS">
+        </div>
+        <div class="form-group">
+          <label for="linkUrl">Endereço (URL ou Arquivo Local)</label>
+          <input type="text" id="linkUrl" placeholder="https://... ou .onion">
+        </div>
+        <div class="form-group">
+          <label for="linkUser">Usuário / Login (Opcional)</label>
+          <input type="text" id="linkUser" placeholder="Ex: admin / email@exemplo.com">
+        </div>
+        <div class="form-group">
+          <label for="linkPass">Senha / Token (Opcional)</label>
+          <input type="text" id="linkPass" placeholder="Ex: Senha Secreta">
+        </div>
+        <div class="form-group">
+          <label for="linkCategory">Categoria</label>
+          <input type="text" id="linkCategory" placeholder="Ex: E-mails, Infra, Carteiras">
+        </div>
+        <div class="form-group">
+          <label for="linkDesc">Notas / Descrição</label>
+          <input type="text" id="linkDesc" placeholder="Ex: 2FA físico, backup de emergência">
+        </div>
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 8px;">
+        <button class="btn btn-secondary" onclick="closeForm()">Cancelar</button>
+        <button class="btn btn-primary" id="saveButton" onclick="saveBookmarkAction()">Salvar Item</button>
+      </div>
+    </div>
+
+    <!-- Barra de Filtros e Busca -->
+    <div class="controls-card">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="searchInput" placeholder="Filtrar por nome, URL, usuário, descrição..." oninput="filterBookmarks()">
+      </div>
+      <div class="category-pills" id="categoryPills"></div>
+    </div>
+
+    <!-- Área de Exibição dos Favoritos e Senhas -->
+    <main id="bookmarksContainer" style="display: flex; flex-direction: column; gap: 16px;"></main>
+
+    <!-- Rodapé -->
+    <footer class="footer">
+      <span>Total: <strong id="totalCount" style="color: #38bdf8;">0</strong> itens | Protegido com AES-256-GCM + PBKDF2</span>
+      <span>100% Offline • Zero-Knowledge</span>
+    </footer>
+
+  </div>
+
+  <script>
+    // =========================================================================
+    // PAYLOAD CRIPTOGRAFADO EMBUTIDO NO ARQUIVO (BASE64)
+    // =========================================================================
+    /* __ENCRYPTED_VAULT_PAYLOAD__ */
+    let encryptedVaultPayload = "";
+
+    let currentSessionPassword = "";
+    let bookmarks = [];
+    let customCategoryOrder = ["Geral"];
+    let currentCategoryFilter = 'ALL';
+
+    // --- FUNÇÕES CRIPTOGRÁFICAS NATIVAS (Web Crypto API) ---
+    async function deriveKey(password, salt) {
+      const enc = new TextEncoder();
+      const keyMaterial = await crypto.subtle.importKey(
+        "raw",
+        enc.encode(password),
+        { name: "PBKDF2" },
+        false,
+        ["deriveKey"]
+      );
+      return crypto.subtle.deriveKey(
+        {
+          name: "PBKDF2",
+          salt: salt,
+          iterations: 100000,
+          hash: "SHA-256"
+        },
+        keyMaterial,
+        { name: "AES-GCM", length: 256 },
+        false,
+        ["encrypt", "decrypt"]
+      );
+    }
+
+    async function encryptData(plainText, password) {
+      const salt = crypto.getRandomValues(new Uint8Array(16));
+      const iv = crypto.getRandomValues(new Uint8Array(12));
+      const key = await deriveKey(password, salt);
+      const encoded = new TextEncoder().encode(plainText);
+
+      const ciphertext = await crypto.subtle.encrypt(
+        { name: "AES-GCM", iv: iv },
+        key,
+        encoded
+      );
+
+      const combined = new Uint8Array(salt.byteLength + iv.byteLength + ciphertext.byteLength);
+      combined.set(salt, 0);
+      combined.set(iv, salt.byteLength);
+      combined.set(new Uint8Array(ciphertext), salt.byteLength + iv.byteLength);
+
+      return btoa(String.fromCharCode(...combined));
+    }
+
+    async function decryptData(base64Data, password) {
+      const binary = atob(base64Data);
+      const combined = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) {
+        combined[i] = binary.charCodeAt(i);
+      }
+
+      const salt = combined.slice(0, 16);
+      const iv = combined.slice(16, 28);
+      const ciphertext = combined.slice(28);
+
+      const key = await deriveKey(password, salt);
+
+      const decrypted = await crypto.subtle.decrypt(
+        { name: "AES-GCM", iv: iv },
+        key,
+        ciphertext
+      );
+
+      return new TextDecoder().decode(decrypted);
+    }
+
+    // --- CICLO DE VIDA DO COFRE ---
+    function initVault() {
+      const lockScreen = document.getElementById('lockScreen');
+      const passInput = document.getElementById('masterPasswordInput');
+
+      if (!encryptedVaultPayload || encryptedVaultPayload.trim() === "") {
+        // Cofre virgem: não há dados criptografados salvos
+        bookmarks = [];
+        customCategoryOrder = ["Geral"];
+        render();
+      } else {
+        // Cofre blindado: exigir desbloqueio
+        lockScreen.style.display = 'flex';
+        passInput.value = '';
+        passInput.focus();
+      }
+    }
+
+    async function unlockVault() {
+      const passInput = document.getElementById('masterPasswordInput');
+      const errEl = document.getElementById('lockError');
+      const pass = passInput.value;
+
+      if (!pass) {
+        errEl.textContent = "Digite a Senha Mestra.";
+        return;
+      }
+
+      try {
+        errEl.textContent = "Decifrando...";
+        const decryptedJson = await decryptData(encryptedVaultPayload, pass);
+        const data = JSON.parse(decryptedJson);
+
+        bookmarks = data.bookmarks || [];
+        customCategoryOrder = data.categories || ["Geral"];
+        currentSessionPassword = pass;
+
+        document.getElementById('lockScreen').style.display = 'none';
+        errEl.textContent = "";
+        render();
+      } catch (e) {
+        console.error(e);
+        errEl.textContent = "Senha incorreta ou dados violados!";
+      }
+    }
+
+    function lockVault() {
+      currentSessionPassword = "";
+      bookmarks = [];
+      document.getElementById('bookmarksContainer').innerHTML = "";
+      document.getElementById('lockScreen').style.display = 'flex';
+      document.getElementById('masterPasswordInput').value = "";
+      document.getElementById('lockError').textContent = "";
+      document.getElementById('masterPasswordInput').focus();
+    }
+
+    // --- DOWNLOAD DO ARQUIVO COM BLINDAGEM AUTO-CONTIDA ---
+    async function downloadEncryptedHtml() {
+      let pass = currentSessionPassword;
+
+      if (!pass) {
+        pass = prompt("Defina uma Senha Mestra para proteger este arquivo:");
+        if (!pass || pass.trim().length < 6) {
+          alert("A senha mestra deve conter ao menos 6 caracteres para garantir segurança.");
+          return;
+        }
+        const confirmPass = prompt("Confirme a Senha Mestra digitada:");
+        if (pass !== confirmPass) {
+          alert("As senhas não coincidem. Operação cancelada.");
+          return;
+        }
+        currentSessionPassword = pass;
+      }
+
+      try {
+        const payloadJson = JSON.stringify({
+          bookmarks: bookmarks,
+          categories: customCategoryOrder
+        });
+
+        const cipherBase64 = await encryptData(payloadJson, currentSessionPassword);
+
+        let htmlContent = document.documentElement.outerHTML;
+
+        // Limpa a tela de bloqueio e formulários do código exportado para nascer limpo
+        htmlContent = htmlContent.replace(/let encryptedVaultPayload = "[\s\S]*?";/, `let encryptedVaultPayload = "${cipherBase64}";`);
+
+        const blob = new Blob(["<!DOCTYPE html>\n<html lang=\"pt-BR\">\n" + htmlContent + "\n</html>"], { type: 'text/html;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `CyberVault.html`;
+        a.click();
+        URL.revokeObjectURL(url);
+      } catch (err) {
+        console.error(err);
+        alert("Erro ao criptografar o cofre.");
+      }
+    }
+
+    function clearAllData() {
+      if (!confirm("⚠️ Tem certeza que deseja apagar TODOS os itens e senhas?")) return;
+      if (!confirm("Esta ação limpará completamente a lista em memória. Deseja prosseguir?")) return;
+
+      bookmarks = [];
+      customCategoryOrder = ["Geral"];
+      currentCategoryFilter = 'ALL';
+      render();
+    }
+
+    function openCreateForm() {
+      document.getElementById('editBookmarkId').value = '';
+      document.getElementById('linkTitle').value = '';
+      document.getElementById('linkUrl').value = '';
+      document.getElementById('linkUser').value = '';
+      document.getElementById('linkPass').value = '';
+      document.getElementById('linkCategory').value = '';
+      document.getElementById('linkDesc').value = '';
+
+      document.getElementById('formHeaderTitle').innerHTML = '<span>➕ Novo Registro</span>';
+      document.getElementById('saveButton').textContent = 'Salvar Item';
+
+      const panel = document.getElementById('formPanel');
+      panel.style.display = 'block';
+      document.getElementById('linkTitle').focus();
+    }
+
+    function editBookmark(id) {
+      const item = bookmarks.find(b => b.id === id);
+      if (!item) return;
+
+      document.getElementById('editBookmarkId').value = item.id;
+      document.getElementById('linkTitle').value = item.title;
+      document.getElementById('linkUrl').value = item.url;
+      document.getElementById('linkUser').value = item.user || '';
+      document.getElementById('linkPass').value = item.pass || '';
+      document.getElementById('linkCategory').value = item.category || 'Geral';
+      document.getElementById('linkDesc').value = item.desc || '';
+
+      document.getElementById('formHeaderTitle').innerHTML = '<span>✏️ Editar Item</span>';
+      document.getElementById('saveButton').textContent = 'Atualizar Item';
+
+      const panel = document.getElementById('formPanel');
+      panel.style.display = 'block';
+      panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      document.getElementById('linkTitle').focus();
+    }
+
+    function closeForm() {
+      document.getElementById('formPanel').style.display = 'none';
+      document.getElementById('editBookmarkId').value = '';
+    }
+
+    function saveBookmarkAction() {
+      const editId = document.getElementById('editBookmarkId').value;
+      const title = document.getElementById('linkTitle').value.trim();
+      let url = document.getElementById('linkUrl').value.trim();
+      const user = document.getElementById('linkUser').value.trim();
+      const pass = document.getElementById('linkPass').value.trim();
+      let category = document.getElementById('linkCategory').value.trim() || 'Geral';
+      const desc = document.getElementById('linkDesc').value.trim();
+
+      if (!title) {
+        alert('Por favor, informe ao menos o Título / Serviço.');
+        return;
+      }
+
+      if (url && !url.endsWith('.html') && !/^https?:\/\//i.test(url) && !url.endsWith('.onion')) {
+        url = 'https://' + url;
+      }
+
+      if (editId) {
+        const index = bookmarks.findIndex(b => b.id === editId);
+        if (index !== -1) {
+          bookmarks[index] = {
+            ...bookmarks[index],
+            title,
+            url,
+            user,
+            pass,
+            category,
+            desc
+          };
+        }
+      } else {
+        const newBookmark = {
+          id: Date.now().toString(),
+          title,
+          url,
+          user,
+          pass,
+          category,
+          desc
+        };
+        bookmarks.push(newBookmark);
+      }
+
+      if (!customCategoryOrder.includes(category)) {
+        customCategoryOrder.push(category);
+      }
+
+      render();
+      closeForm();
+    }
+
+    function deleteBookmark(id) {
+      if (confirm('Deseja realmente remover este registro?')) {
+        bookmarks = bookmarks.filter(b => b.id !== id);
+        render();
+      }
+    }
+
+    function renameCategory(oldName) {
+      const newName = prompt(`Digite o novo nome para a categoria "${oldName}":`, oldName);
+      if (!newName || newName.trim() === '' || newName.trim() === oldName) return;
+
+      const cleanNewName = newName.trim();
+
+      bookmarks.forEach(b => {
+        if (b.category === oldName) {
+          b.category = cleanNewName;
+        }
+      });
+
+      const index = customCategoryOrder.indexOf(oldName);
+      if (index !== -1) {
+        if (customCategoryOrder.includes(cleanNewName)) {
+          customCategoryOrder.splice(index, 1);
+        } else {
+          customCategoryOrder[index] = cleanNewName;
+        }
+      }
+
+      if (currentCategoryFilter === oldName) {
+        currentCategoryFilter = cleanNewName;
+      }
+
+      render();
+    }
+
+    function setFilterCategory(cat) {
+      currentCategoryFilter = cat;
+      render();
+    }
+
+    function filterBookmarks() {
+      render();
+    }
+
+    async function copyToClipboard(text, btn) {
+      if (!text) return;
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(text);
+        } else {
+          const ta = document.createElement("textarea");
+          ta.value = text;
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+        }
+        const originalContent = btn.innerHTML;
+        btn.innerHTML = `<span style="color: #34d399; font-size: 10px;">✓</span>`;
+        setTimeout(() => btn.innerHTML = originalContent, 1000);
+      } catch (err) {
+        console.error("Erro ao copiar:", err);
+      }
+    }
+
+    function toggleMask(id) {
+      const span = document.getElementById(id);
+      if (!span) return;
+      if (span.getAttribute('data-hidden') === 'true') {
+        span.textContent = span.getAttribute('data-real');
+        span.setAttribute('data-hidden', 'false');
+      } else {
+        span.textContent = '••••••••••••';
+        span.setAttribute('data-hidden', 'true');
+      }
+    }
+
+    function renderCategoryPills(categories) {
+      const container = document.getElementById('categoryPills');
+      container.innerHTML = '';
+
+      const allPill = document.createElement('button');
+      allPill.className = `pill ${currentCategoryFilter === 'ALL' ? 'active' : ''}`;
+      allPill.textContent = 'Todas';
+      allPill.onclick = () => setFilterCategory('ALL');
+      container.appendChild(allPill);
+
+      categories.forEach(cat => {
+        const pill = document.createElement('button');
+        pill.className = `pill ${currentCategoryFilter === cat ? 'active' : ''}`;
+        pill.textContent = cat;
+        pill.title = "Clique para filtrar | Duplo clique para renomear";
+
+        pill.onclick = () => setFilterCategory(cat);
+        pill.ondblclick = (e) => {
+          e.stopPropagation();
+          renameCategory(cat);
+        };
+
+        container.appendChild(pill);
+      });
+    }
+
+    function render() {
+      const query = document.getElementById('searchInput').value.toLowerCase().trim();
+      const container = document.getElementById('bookmarksContainer');
+      document.getElementById('totalCount').textContent = bookmarks.length;
+
+      const foundCats = [...new Set(bookmarks.map(b => b.category || 'Geral'))];
+      
+      customCategoryOrder = customCategoryOrder.filter(c => foundCats.includes(c));
+      foundCats.forEach(c => {
+        if (!customCategoryOrder.includes(c)) customCategoryOrder.push(c);
+      });
+
+      renderCategoryPills(customCategoryOrder);
+
+      let filtered = bookmarks.filter(item => {
+        const matchQuery = 
+          item.title.toLowerCase().includes(query) ||
+          (item.url && item.url.toLowerCase().includes(query)) ||
+          (item.user && item.user.toLowerCase().includes(query)) ||
+          (item.desc && item.desc.toLowerCase().includes(query)) ||
+          (item.category && item.category.toLowerCase().includes(query));
+
+        const matchCat = currentCategoryFilter === 'ALL' || item.category === currentCategoryFilter;
+
+        return matchQuery && matchCat;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            Nenhum item cadastrado ou encontrado para o filtro.
+          </div>
+        `;
+        return;
+      }
+
+      const grouped = {};
+      customCategoryOrder.forEach(cat => grouped[cat] = []);
+
+      filtered.forEach(b => {
+        const cat = b.category || 'Geral';
+        if (!grouped[cat]) grouped[cat] = [];
+        grouped[cat].push(b);
+      });
+
+      container.innerHTML = '';
+
+      customCategoryOrder.forEach(cat => {
+        if (!grouped[cat] || grouped[cat].length === 0) return;
+
+        const section = document.createElement('div');
+        section.className = 'category-section';
+
+        const title = document.createElement('div');
+        title.className = 'category-title';
+        title.innerHTML = `
+          <span>📁 ${escapeHtml(cat)}</span> 
+          <span style="font-size: 10px; color: #64748b;">(${grouped[cat].length})</span>
+          <button class="btn-edit-cat" onclick="renameCategory('${escapeHtml(cat)}')" title="Renomear esta categoria">
+            <svg style="width: 12px; height: 12px;" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+          </button>
+        `;
+        section.appendChild(title);
+
+        const grid = document.createElement('div');
+        grid.className = 'bookmarks-grid';
+
+        grouped[cat].forEach(item => {
+          const card = document.createElement('div');
+          card.className = 'bookmark-card';
+          const passId = `pass_${item.id}`;
+
+          card.innerHTML = `
+            <div>
+              <div class="bookmark-top">
+                ${item.url ? `
+                  <a href="${encodeURI(item.url)}" target="_blank" rel="noopener noreferrer" class="bookmark-title-link" onclick="event.stopPropagation();">
+                    <span>${escapeHtml(item.title)}</span>
+                    <span style="font-size: 10px; color: #38bdf8;">↗</span>
+                  </a>
+                ` : `
+                  <span class="bookmark-title-link" style="color: #ffffff;">${escapeHtml(item.title)}</span>
+                `}
+                <div class="card-actions" onclick="event.stopPropagation();">
+                  <button class="btn-icon edit" onclick="editBookmark('${item.id}')" title="Editar Registro">
+                    <svg style="width: 14px; height: 14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                  </button>
+                  <button class="btn-icon delete" onclick="deleteBookmark('${item.id}')" title="Excluir Registro">
+                    <svg style="width: 14px; height: 14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              ${item.desc ? `<div class="bookmark-desc">${escapeHtml(item.desc)}</div>` : ''}
+
+              ${item.user ? `
+                <div class="cred-row">
+                  <span class="cred-label">Login:</span>
+                  <span class="cred-value" title="${escapeHtml(item.user)}">${escapeHtml(item.user)}</span>
+                  <div class="cred-actions">
+                    <button class="btn-cred-mini" onclick="copyToClipboard('${escapeJs(item.user)}', this)" title="Copiar Usuário">📋</button>
+                  </div>
+                </div>
+              ` : ''}
+
+              ${item.pass ? `
+                <div class="cred-row">
+                  <span class="cred-label">Senha:</span>
+                  <span class="cred-value" id="${passId}" data-real="${escapeHtml(item.pass)}" data-hidden="true">••••••••••••</span>
+                  <div class="cred-actions">
+                    <button class="btn-cred-mini" onclick="toggleMask('${passId}')" title="Mostrar/Ocultar Senha">👁️</button>
+                    <button class="btn-cred-mini" onclick="copyToClipboard('${escapeJs(item.pass)}', this)" title="Copiar Senha">📋</button>
+                  </div>
+                </div>
+              ` : ''}
+            </div>
+
+            <div class="bookmark-meta">
+              <span class="bookmark-cat">${escapeHtml(item.category)}</span>
+              ${item.url ? `
+                <span style="font-size: 10px; color: #475569; font-family: monospace; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                  ${escapeHtml(item.url)}
+                </span>
+              ` : ''}
+            </div>
+          `;
+
+          grid.appendChild(card);
+        });
+
+        section.appendChild(grid);
+        container.appendChild(section);
+      });
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      return String(text)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function escapeJs(text) {
+      if (!text) return '';
+      return String(text).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
+    }
+
+    window.onload = initVault;
+  </script>
+</body>
+</html>
