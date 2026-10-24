@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CyberMorse Pro - Terminal Bidirecional & Decodificador WAV</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: #07090e;
+      color: #e2e8f0;
+      font-family: 'Inter', -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding: 16px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 940px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    /* Header */
+    .header-card {
+      background-color: #111726;
+      border: 1px solid #1e293b;
+      border-radius: 14px;
+      padding: 14px 18px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #06b6d4, #0284c7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 10px rgba(6, 182, 212, 0.3);
+    }
+
+    .brand-icon svg {
+      width: 20px;
+      height: 20px;
+      stroke: #ffffff;
+      fill: none;
+    }
+
+    .brand-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .badge-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background-color: rgba(6, 182, 212, 0.15);
+      border: 1px solid rgba(6, 182, 212, 0.35);
+      color: #38bdf8;
+      text-transform: uppercase;
+    }
+
+    /* Painéis */
+    .panel {
+      background-color: #111726;
+      border: 1px solid #1e293b;
+      border-radius: 12px;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .controls-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      align-items: center;
+    }
+
+    .control-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .control-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      font-weight: 600;
+      color: #94a3b8;
+      text-transform: uppercase;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .range-slider {
+      width: 100%;
+      accent-color: #06b6d4;
+      cursor: pointer;
+    }
+
+    /* Áreas de Texto */
+    .io-container {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .textarea-box {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .textarea-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 600;
+      color: #94a3b8;
+      text-transform: uppercase;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 105px;
+      background-color: #070a12;
+      border: 1px solid #1e293b;
+      border-radius: 10px;
+      padding: 12px;
+      color: #f1f5f9;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      resize: vertical;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      line-height: 1.5;
+    }
+
+    textarea:focus {
+      border-color: #06b6d4;
+      box-shadow: 0 0 10px rgba(6, 182, 212, 0.2);
+    }
+
+    #morseInput {
+      color: #38bdf8;
+      font-size: 14px;
+      letter-spacing: 0.08em;
+    }
+
+    /* Botões */
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .btn {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 600;
+      border-radius: 8px;
+      padding: 7px 12px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+      border: 1px solid transparent;
+      user-select: none;
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background-color: #0284c7;
+      color: #ffffff;
+      box-shadow: 0 2px 8px rgba(2, 132, 199, 0.3);
+    }
+
+    .btn-primary:hover {
+      background-color: #0369a1;
+    }
+
+    .btn-emerald {
+      background-color: rgba(16, 185, 129, 0.15);
+      border-color: rgba(16, 185, 129, 0.4);
+      color: #34d399;
+    }
+
+    .btn-emerald:hover {
+      background-color: #10b981;
+      color: #ffffff;
+    }
+
+    .btn-amber {
+      background-color: rgba(245, 158, 11, 0.15);
+      border-color: rgba(245, 158, 11, 0.4);
+      color: #fbbf24;
+    }
+
+    .btn-amber:hover {
+      background-color: #f59e0b;
+      color: #000000;
+    }
+
+    .btn-secondary {
+      background-color: #1e293b;
+      border-color: #334155;
+      color: #cbd5e1;
+    }
+
+    .btn-secondary:hover {
+      background-color: #334155;
+      color: #ffffff;
+    }
+
+    .btn-danger {
+      background-color: rgba(239, 68, 68, 0.15);
+      border-color: rgba(239, 68, 68, 0.4);
+      color: #f87171;
+    }
+
+    .btn-danger:hover {
+      background-color: #ef4444;
+      color: #ffffff;
+    }
+
+    .status-light {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: #64748b;
+      transition: background-color 0.1s, box-shadow 0.1s;
+    }
+
+    .status-light.active {
+      background-color: #38bdf8;
+      box-shadow: 0 0 10px #38bdf8;
+    }
+
+    /* Footer */
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid #1e293b;
+      padding-top: 10px;
+      font-size: 11px;
+      color: #64748b;
+      font-family: 'JetBrains Mono', monospace;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    
+    <!-- Top Bar -->
+    <header class="header-card">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+          </svg>
+        </div>
+        <div class="brand-title">
+          CyberMorse Pro <span class="badge-tag">Duplex & DSP</span>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <!-- Reproduzir Áudio -->
+        <button id="btnPlay" class="btn btn-primary" onclick="togglePlayAudio()">
+          <span id="playIcon">▶</span> <span id="playText">Ouvir Código</span>
+        </button>
+
+        <!-- Baixar WAV -->
+        <button class="btn btn-emerald" onclick="downloadAudioWav()" title="Gerar e baixar arquivo de som WAV">
+          🎵 <span>Baixar WAV</span>
+        </button>
+
+        <!-- Decodificar WAV Externo -->
+        <label class="btn btn-amber" style="margin:0; cursor:pointer;" title="Carregar arquivo .wav para decodificar em texto">
+          📻 <span>Decodificar WAV</span>
+          <input type="file" id="wavFileInput" accept=".wav,audio/wav" onchange="decodeWavFile(event)" style="display:none;">
+        </label>
+
+        <!-- Baixar Texto -->
+        <button class="btn btn-secondary" onclick="downloadTextMorse()" title="Salvar relatório com texto e morse">
+          📄 <span>Baixar TXT</span>
+        </button>
+
+        <!-- Limpar -->
+        <button class="btn btn-danger" onclick="clearAll()" title="Zerar todas as caixas de entrada">
+          🗑️ <span>Limpar</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Parâmetros de Modulação -->
+    <div class="panel">
+      <div class="controls-grid">
+        <div class="control-item">
+          <div class="control-label">
+            <span>Velocidade de Transmissão</span>
+            <span id="wpmValue" style="color: #38bdf8;">16 WPM</span>
+          </div>
+          <input type="range" id="wpmSlider" class="range-slider" min="5" max="35" value="16" oninput="updateSettings()">
+        </div>
+
+        <div class="control-item">
+          <div class="control-label">
+            <span>Frequência do Tom (Pitch)</span>
+            <span id="freqValue" style="color: #38bdf8;">650 Hz</span>
+          </div>
+          <input type="range" id="freqSlider" class="range-slider" min="400" max="1000" step="10" value="650" oninput="updateSettings()">
+        </div>
+
+        <div class="control-item" style="display: flex; flex-direction: row; align-items: center; justify-content: flex-end; gap: 8px;">
+          <span class="status-light" id="txIndicator"></span>
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #94a3b8;">SINAL ATIVO (TX/RX)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Áreas Bidirecionais de Texto -->
+    <main class="io-container">
+      
+      <!-- Entrada 1: Texto Alfanumérico -->
+      <div class="panel textarea-box">
+        <div class="textarea-header">
+          <span>Texto Alfanumérico (Digitação ou Decodificado)</span>
+          <button class="btn btn-secondary" style="padding: 2px 8px; font-size: 10px;" onclick="copyInput('textInput')">Copiar</button>
+        </div>
+        <textarea id="textInput" placeholder="Digite seu texto alfanumérico aqui..." oninput="handleTextToMorse()"></textarea>
+      </div>
+
+      <!-- Entrada 2: Código Morse -->
+      <div class="panel textarea-box">
+        <div class="textarea-header">
+          <span>Código Morse (Edite/Cole com . e - | Espaço separa letras | / separa palavras)</span>
+          <button class="btn btn-secondary" style="padding: 2px 8px; font-size: 10px;" onclick="copyInput('morseInput')">Copiar Morse</button>
+        </div>
+        <textarea id="morseInput" placeholder="Ou digite/cole o código Morse diretamente aqui para converter em texto..." oninput="handleMorseToText()"></textarea>
+      </div>
+
+    </main>
+
+    <!-- Rodapé Informativo -->
+    <footer class="footer">
+      <span>Modo Bidirecional Ativo: Digite em qualquer caixa ou carregue um arquivo .WAV</span>
+      <span>Padrão Internacional ITU | 100% Offline</span>
+    </footer>
+
+  </div>
+
+  <script>
+    // Dicionário Internacional ITU
+    const MORSE_MAP = {
+      'A': '.-',    'B': '-...',  'C': '-.-.',  'D': '-..',
+      'E': '.',     'F': '..-.',  'G': '--.',   'H': '....',
+      'I': '..',    'J': '.---',  'K': '-.-',   'L': '.-..',
+      'M': '--',    'N': '-.',    'O': '---',   'P': '.--.',
+      'Q': '--.-',  'R': '.-.',   'S': '...',   'T': '-',
+      'U': '..-',   'V': '...-',  'W': '.--',   'X': '-..-',
+      'Y': '-.--',  'Z': '--..',
+      '0': '-----', '1': '.----', '2': '..---', '3': '...--',
+      '4': '....-', '5': '.....', '6': '-....', '7': '--...',
+      '8': '---..', '9': '----.',
+      '.': '.-.-.-', ',': '--..--', '?': '..--..', "'": '.----.',
+      '!': '-.-.--', '/': '-..-.',  '(': '-.--.',  ')': '-.--.-',
+      '&': '.-...',  ':': '---...', ';': '-.-.-.', '=': '-...-',
+      '+': '.-.-.',  '-': '-....-', '_': '..--.-', '"': '.-..-.',
+      '$': '...-..-', '@': '.--.-.'
+    };
+
+    // Mapa reverso para decodificação Morse -> Texto
+    const REVERSE_MORSE_MAP = {};
+    for (const [char, code] of Object.entries(MORSE_MAP)) {
+      REVERSE_MORSE_MAP[code] = char;
+    }
+
+    let audioCtx = null;
+    let isPlaying = false;
+    let stopPlaybackFlag = false;
+
+    function getAudioContext() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      return audioCtx;
+    }
+
+    function updateSettings() {
+      document.getElementById('wpmValue').textContent = document.getElementById('wpmSlider').value + ' WPM';
+      document.getElementById('freqValue').textContent = document.getElementById('freqSlider').value + ' Hz';
+    }
+
+    // 1. TEXTO -> MORSE
+    function handleTextToMorse() {
+      const input = document.getElementById('textInput').value;
+      const cleanText = input.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
+      
+      const words = cleanText.split(/\s+/);
+      const morseWords = words.map(word => {
+        return word.split('').map(char => MORSE_MAP[char] || '').filter(Boolean).join(' ');
+      });
+
+      document.getElementById('morseInput').value = morseWords.join(' / ');
+    }
+
+    // 2. MORSE -> TEXTO
+    function handleMorseToText() {
+      const morseRaw = document.getElementById('morseInput').value.trim();
+      if (!morseRaw) {
+        document.getElementById('textInput').value = '';
+        return;
+      }
+
+      // Normaliza traços longos ou underscores para '-'
+      const normalized = morseRaw.replace(/—|–|_/g, '-');
+
+      // Divide por palavras (separadas por '/' ou barras com espaços)
+      const words = normalized.split(/\s*\/\s*|\s{3,}/);
+
+      const decodedWords = words.map(word => {
+        const letters = word.trim().split(/\s+/);
+        return letters.map(code => REVERSE_MORSE_MAP[code] || '?').join('');
+      });
+
+      document.getElementById('textInput').value = decodedWords.join(' ');
+    }
+
+    function clearAll() {
+      stopAudio();
+      document.getElementById('textInput').value = '';
+      document.getElementById('morseInput').value = '';
+      document.getElementById('textInput').focus();
+    }
+
+    // =========================================================================
+    // REPRODUÇÃO EM ÁUDIO
+    // =========================================================================
+    async function togglePlayAudio() {
+      if (isPlaying) {
+        stopAudio();
+        return;
+      }
+
+      const morse = document.getElementById('morseInput').value.trim();
+      if (!morse) return;
+
+      const wpm = parseInt(document.getElementById('wpmSlider').value, 10);
+      const freq = parseInt(document.getElementById('freqSlider').value, 10);
+      const dotDuration = 1.2 / wpm;
+
+      const ctx = getAudioContext();
+      isPlaying = true;
+      stopPlaybackFlag = false;
+
+      document.getElementById('playText').textContent = "Parar Áudio";
+      document.getElementById('playIcon').textContent = "⏹";
+
+      const txLight = document.getElementById('txIndicator');
+
+      for (let i = 0; i < morse.length; i++) {
+        if (stopPlaybackFlag) break;
+        const char = morse[i];
+
+        if (char === '.' || char === '-') {
+          const duration = (char === '.') ? dotDuration : (dotDuration * 3);
+          txLight.classList.add('active');
+          await playBeep(ctx, freq, duration);
+          txLight.classList.remove('active');
+          await sleep(dotDuration);
+        } else if (char === ' ') {
+          await sleep(dotDuration * 2);
+        } else if (char === '/') {
+          await sleep(dotDuration * 6);
+        }
+      }
+
+      stopAudio();
+    }
+
+    function stopAudio() {
+      stopPlaybackFlag = true;
+      isPlaying = false;
+      document.getElementById('playText').textContent = "Ouvir Código";
+      document.getElementById('playIcon').textContent = "▶";
+      document.getElementById('txIndicator').classList.remove('active');
+    }
+
+    function playBeep(ctx, frequency, duration) {
+      return new Promise((resolve) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(frequency, ctx.currentTime);
+
+        const attack = 0.005;
+        gain.gain.setValueAtTime(0, ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.3, ctx.currentTime + attack);
+        gain.gain.setValueAtTime(0.3, ctx.currentTime + duration - attack);
+        gain.gain.linearRampToValueAtTime(0, ctx.currentTime + duration);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + duration);
+
+        setTimeout(resolve, duration * 1000);
+      });
+    }
+
+    function sleep(seconds) {
+      return new Promise(resolve => setTimeout(resolve, seconds * 1000));
+    }
+
+    // =========================================================================
+    // EXPORTAÇÃO DE ÁUDIO WAV PCM 16-BIT
+    // =========================================================================
+    async function downloadAudioWav() {
+      const morse = document.getElementById('morseInput').value.trim();
+      if (!morse) {
+        alert("Digite um texto ou código morse primeiro!");
+        return;
+      }
+
+      const wpm = parseInt(document.getElementById('wpmSlider').value, 10);
+      const freq = parseInt(document.getElementById('freqSlider').value, 10);
+      const dotDuration = 1.2 / wpm;
+
+      let totalDuration = 0.2;
+      for (let i = 0; i < morse.length; i++) {
+        const char = morse[i];
+        if (char === '.') totalDuration += dotDuration * 2;
+        else if (char === '-') totalDuration += (dotDuration * 3) + dotDuration;
+        else if (char === ' ') totalDuration += dotDuration * 2;
+        else if (char === '/') totalDuration += dotDuration * 6;
+      }
+
+      const sampleRate = 44100;
+      const offlineCtx = new OfflineAudioContext(1, Math.ceil(totalDuration * sampleRate), sampleRate);
+
+      let currTime = 0.1;
+      for (let i = 0; i < morse.length; i++) {
+        const char = morse[i];
+        if (char === '.' || char === '-') {
+          const dur = (char === '.') ? dotDuration : (dotDuration * 3);
+          
+          const osc = offlineCtx.createOscillator();
+          const gain = offlineCtx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, currTime);
+
+          gain.gain.setValueAtTime(0, currTime);
+          gain.gain.linearRampToValueAtTime(0.3, currTime + 0.005);
+          gain.gain.setValueAtTime(0.3, currTime + dur - 0.005);
+          gain.gain.linearRampToValueAtTime(0, currTime + dur);
+
+          osc.connect(gain);
+          gain.connect(offlineCtx.destination);
+
+          osc.start(currTime);
+          osc.stop(currTime + dur);
+
+          currTime += dur + dotDuration;
+        } else if (char === ' ') {
+          currTime += dotDuration * 2;
+        } else if (char === '/') {
+          currTime += dotDuration * 6;
+        }
+      }
+
+      const renderedBuffer = await offlineCtx.startRendering();
+      const wavBlob = audioBufferToWavBlob(renderedBuffer);
+
+      const url = URL.createObjectURL(wavBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `morse_transmissao_${Date.now()}.wav`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function audioBufferToWavBlob(buffer) {
+      const numOfChan = buffer.numberOfChannels;
+      const length = buffer.length * numOfChan * 2 + 44;
+      const out = new DataView(new ArrayBuffer(length));
+      const channels = [];
+      let sample = 0;
+      let offset = 0;
+      let pos = 0;
+
+      function setUint16(data) { out.setUint16(pos, data, true); pos += 2; }
+      function setUint32(data) { out.setUint32(pos, data, true); pos += 4; }
+
+      setUint32(0x46464952);
+      setUint32(length - 8);
+      setUint32(0x45564157);
+
+      setUint32(0x20746d66);
+      setUint32(16);
+      setUint16(1);
+      setUint16(numOfChan);
+      setUint32(buffer.sampleRate);
+      setUint32(buffer.sampleRate * 2 * numOfChan);
+      setUint16(numOfChan * 2);
+      setUint16(16);
+
+      setUint32(0x61746164);
+      setUint32(length - pos - 4);
+
+      for (let i = 0; i < buffer.numberOfChannels; i++) {
+        channels.push(buffer.getChannelData(i));
+      }
+
+      while (offset < buffer.length) {
+        for (let i = 0; i < numOfChan; i++) {
+          sample = Math.max(-1, Math.min(1, channels[i][offset]));
+          sample = (0.5 + sample < 0 ? sample * 32768 : sample * 32767) | 0;
+          out.setInt16(pos, sample, true);
+          pos += 2;
+        }
+        offset++;
+      }
+
+      return new Blob([out], { type: 'audio/wav' });
+    }
+
+    // =========================================================================
+    // DECODIFICADOR NATIVO DE ARQUIVO .WAV PARA MORSE E TEXTO (DSP LOCAL)
+    // =========================================================================
+    async function decodeWavFile(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const txLight = document.getElementById('txIndicator');
+      txLight.classList.add('active');
+
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const ctx = getAudioContext();
+        const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
+
+        const channelData = audioBuffer.getChannelData(0);
+        const sampleRate = audioBuffer.sampleRate;
+
+        // Análise de energia (envelope RMS em janelas de 10ms)
+        const windowSize = Math.floor(sampleRate * 0.01);
+        const envelopes = [];
+        let maxEnergy = 0;
+
+        for (let i = 0; i < channelData.length; i += windowSize) {
+          let sumSquares = 0;
+          let count = 0;
+          for (let j = i; j < i + windowSize && j < channelData.length; j++) {
+            sumSquares += channelData[j] * channelData[j];
+            count++;
+          }
+          const rms = Math.sqrt(sumSquares / count);
+          envelopes.push(rms);
+          if (rms > maxEnergy) maxEnergy = rms;
+        }
+
+        // Limiar de silêncio vs tom (30% da energia de pico)
+        const threshold = maxEnergy * 0.30;
+        const pulses = []; // { isTone: bool, durationMs: number }
+        
+        let currentIsTone = envelopes[0] >= threshold;
+        let countBlocks = 0;
+
+        for (let i = 0; i < envelopes.length; i++) {
+          const isTone = envelopes[i] >= threshold;
+          if (isTone === currentIsTone) {
+            countBlocks++;
+          } else {
+            pulses.push({ isTone: currentIsTone, durationMs: countBlocks * 10 });
+            currentIsTone = isTone;
+            countBlocks = 1;
+          }
+        }
+        if (countBlocks > 0) {
+          pulses.push({ isTone: currentIsTone, durationMs: countBlocks * 10 });
+        }
+
+        // Estimar a duração de 1 "dot" com base nos pulsos de tom mais curtos
+        const toneDurations = pulses.filter(p => p.isTone && p.durationMs >= 20).map(p => p.durationMs);
+        if (toneDurations.length === 0) {
+          alert("Não foi possível identificar pulsos de áudio no arquivo selecionado.");
+          return;
+        }
+
+        toneDurations.sort((a, b) => a - b);
+        const estimatedDot = toneDurations[Math.floor(toneDurations.length * 0.2)] || 80;
+        const dashThreshold = estimatedDot * 2.1;
+        const letterSpaceThreshold = estimatedDot * 2.2;
+        const wordSpaceThreshold = estimatedDot * 4.8;
+
+        let reconstructedMorse = "";
+
+        for (let i = 0; i < pulses.length; i++) {
+          const p = pulses[i];
+          if (p.isTone) {
+            if (p.durationMs >= dashThreshold) {
+              reconstructedMorse += "-";
+            } else if (p.durationMs >= estimatedDot * 0.4) {
+              reconstructedMorse += ".";
+            }
+          } else {
+            // Silêncio
+            if (p.durationMs >= wordSpaceThreshold) {
+              reconstructedMorse += " / ";
+            } else if (p.durationMs >= letterSpaceThreshold) {
+              reconstructedMorse += " ";
+            }
+          }
+        }
+
+        // Limpa espaços duplicados
+        reconstructedMorse = reconstructedMorse.replace(/\s+/g, ' ').replace(/\s*\/\s*/g, ' / ').trim();
+
+        document.getElementById('morseInput').value = reconstructedMorse;
+        handleMorseToText();
+
+      } catch (err) {
+        console.error("Erro ao decodificar WAV:", err);
+        alert("Erro ao ler arquivo .wav. Certifique-se de que é um áudio WAV com tons audíveis.");
+      } finally {
+        txLight.classList.remove('active');
+        event.target.value = ''; // reseta input para permitir recarga
+      }
+    }
+
+    // =========================================================================
+    // EXPORTAÇÃO E CÓPIA
+    // =========================================================================
+    function downloadTextMorse() {
+      const text = document.getElementById('textInput').value;
+      const morse = document.getElementById('morseInput').value;
+
+      if (!text && !morse) {
+        alert("Não há dados para exportar!");
+        return;
+      }
+
+      const content = `==============================\nCYBERMORSE - REGISTRO DE DADOS\n==============================\n\nMENSAGEM:\n${text}\n\nCÓDIGO MORSE ITU:\n${morse}\n\nData: ${new Date().toLocaleString()}\n`;
+      const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `morse_registro_${Date.now()}.txt`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function copyInput(id) {
+      const el = document.getElementById(id);
+      if (!el.value) return;
+      navigator.clipboard.writeText(el.value);
+    }
+  </script>
+</body>
+</html>
