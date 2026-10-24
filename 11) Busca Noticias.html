@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Radar Intel Live</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            radar: {
+              bg: '#05080e',
+              surface: '#0c131f',
+              card: '#111b2b',
+              border: '#1a273b',
+              glow: '#10b981'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .line-clamp-2 {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body class="bg-radar-bg text-slate-100 font-sans min-h-screen flex flex-col antialiased selection:bg-emerald-500/30 selection:text-emerald-300">
+
+  <header class="border-b border-radar-border bg-radar-surface/95 backdrop-blur-md sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center space-x-3">
+        <div class="flex items-center justify-center w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 shrink-0">
+          <i data-lucide="radio" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <h1 class="text-sm sm:text-base font-extrabold tracking-wider text-white flex items-center gap-2 font-mono">
+            RADAR INTEL LIVE
+            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono bg-emerald-950/90 text-emerald-400 border border-emerald-500/40 uppercase font-semibold">
+              WORKER PRIVADO ATIVO
+            </span>
+          </h1>
+          <p class="text-[11px] text-slate-400 hidden sm:block">Alerta em tempo real • Conexão direta via Cloudflare Worker</p>
+        </div>
+      </div>
+
+      <div class="flex items-center space-x-2">
+        <button type="button" id="toggleAudioBtn" class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-slate-700/80 bg-slate-900/90 hover:bg-slate-800 transition text-slate-200 cursor-pointer shadow-sm">
+          <i id="audioIcon" data-lucide="volume-2" class="w-4 h-4 text-emerald-400"></i>
+          <span id="audioStatusText" class="font-mono text-[11px]">Som: Ativo</span>
+        </button>
+
+        <button type="button" id="testAudioBtn" class="flex items-center space-x-1 px-2.5 py-1.5 rounded-lg text-xs font-medium border border-slate-700/80 bg-slate-900/60 hover:bg-slate-800 text-slate-300 transition cursor-pointer">
+          <i data-lucide="bell" class="w-3.5 h-3.5 text-amber-400"></i>
+          <span class="text-[11px]">Testar</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5 flex flex-col gap-5">
+    <section class="bg-radar-surface/90 border border-radar-border rounded-2xl p-4 sm:p-5 shadow-2xl backdrop-blur-sm">
+      
+      <div class="mb-4 pb-3 border-b border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div class="flex items-center gap-2.5">
+          <span class="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+            <i data-lucide="sliders-horizontal" class="w-4 h-4 text-emerald-400"></i>
+            Modo:
+          </span>
+          
+          <!-- Botão já nasce com bg-emerald-600 e o botão deslizado com translate-x-7 -->
+          <button type="button" id="modeSwitchBtn" class="relative inline-flex h-7 w-14 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out bg-emerald-600 focus:outline-none">
+            <span id="modeSwitchThumb" class="pointer-events-none inline-block h-6 w-6 transform rounded-full bg-slate-100 shadow-lg ring-0 transition duration-200 ease-in-out translate-x-7"></span>
+          </button>
+
+          <span id="modeLabel" class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-500/50">
+            PLANTÃO GERAL
+          </span>
+        </div>
+
+        <p class="text-[11px] text-slate-400 font-mono" id="modeDescription">
+          Monitorando todo o fluxo das fontes sem filtros.
+        </p>
+      </div>
+
+      <div class="flex flex-col lg:flex-row items-stretch lg:items-center gap-3">
+        <div class="relative flex-1">
+          <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+            <i data-lucide="search" class="w-4 h-4 text-emerald-400"></i>
+          </div>
+          <input 
+            type="text" 
+            id="keywordInput" 
+            value="" 
+            disabled
+            placeholder="Digite palavras-chave (ex: Campinas, Bitcoin, Dólar, Polícia)..." 
+            class="w-full pl-10 pr-4 py-2.5 bg-radar-bg border border-slate-700/80 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition font-medium disabled:opacity-40 disabled:cursor-not-allowed"
+          />
+        </div>
+
+        <!-- Seletor de Quantidade Visível -->
+        <div class="flex items-center space-x-2 bg-radar-bg border border-slate-700/80 rounded-xl px-3 py-2">
+          <i data-lucide="list-ordered" class="w-4 h-4 text-emerald-400"></i>
+          <label for="displayLimitSelect" class="text-xs text-slate-400 whitespace-nowrap">Exibir:</label>
+          <select id="displayLimitSelect" class="bg-transparent text-xs font-mono font-medium text-emerald-400 focus:outline-none cursor-pointer">
+            <option value="5" class="bg-slate-900 text-slate-200" selected>5 notícias</option>
+            <option value="10" class="bg-slate-900 text-slate-200">10 notícias</option>
+            <option value="25" class="bg-slate-900 text-slate-200">25 notícias</option>
+            <option value="50" class="bg-slate-900 text-slate-200">50 notícias</option>
+            <option value="100" class="bg-slate-900 text-slate-200">100 notícias</option>
+          </select>
+        </div>
+
+        <!-- Intervalo de Varredura -->
+        <div class="flex items-center space-x-2 bg-radar-bg border border-slate-700/80 rounded-xl px-3 py-2">
+          <i data-lucide="clock" class="w-4 h-4 text-emerald-400"></i>
+          <label for="intervalSelect" class="text-xs text-slate-400 whitespace-nowrap">Varredura:</label>
+          <select id="intervalSelect" class="bg-transparent text-xs font-mono font-medium text-emerald-400 focus:outline-none cursor-pointer">
+            <option value="30" class="bg-slate-900 text-slate-200">30 seg</option>
+            <option value="60" class="bg-slate-900 text-slate-200" selected>1 min</option>
+            <option value="120" class="bg-slate-900 text-slate-200">2 min</option>
+          </select>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button 
+            type="button" 
+            id="toggleMonitorBtn" 
+            class="flex-1 sm:flex-initial flex items-center justify-center space-x-2 px-6 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition shadow-lg bg-emerald-600 hover:bg-emerald-500 text-white cursor-pointer active:scale-95"
+          >
+            <i id="monitorIcon" data-lucide="play" class="w-4 h-4 fill-current"></i>
+            <span id="monitorBtnText">Iniciar Radar</span>
+          </button>
+
+          <button 
+            type="button" 
+            id="manualCheckBtn" 
+            class="flex items-center justify-center p-2.5 rounded-xl border border-slate-700/80 bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white transition cursor-pointer active:scale-95"
+            title="Escanear Agora"
+          >
+            <i id="manualRefreshIcon" data-lucide="refresh-cw" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Indicadores de Status -->
+    <section class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div class="bg-radar-surface/80 border border-radar-border rounded-xl p-3.5 flex flex-col justify-between">
+        <div class="flex items-center justify-between text-slate-400 text-xs mb-1">
+          <span>Status do Radar</span>
+          <span id="statusPulse" class="h-2 w-2 rounded-full bg-slate-600"></span>
+        </div>
+        <div id="radarStateText" class="text-xs sm:text-sm font-mono font-bold text-slate-300 flex items-center gap-2">
+          PAUSADO
+        </div>
+      </div>
+
+      <div class="bg-radar-surface/80 border border-radar-border rounded-xl p-3.5 flex flex-col justify-between">
+        <div class="text-slate-400 text-xs mb-1">Próxima Varredura</div>
+        <div class="text-sm sm:text-base font-mono font-bold text-emerald-400 flex items-center gap-1.5">
+          <i data-lucide="timer" class="w-4 h-4 text-emerald-500"></i>
+          <span id="countdownText">--</span>
+        </div>
+      </div>
+
+      <div class="bg-radar-surface/80 border border-radar-border rounded-xl p-3.5 flex flex-col justify-between">
+        <div class="text-slate-400 text-xs mb-1">Exibindo / Total</div>
+        <div class="text-sm sm:text-base font-mono font-bold text-white flex items-center gap-1.5">
+          <i data-lucide="layers" class="w-4 h-4 text-slate-500"></i>
+          <span id="totalNewsCount">0</span>
+        </div>
+      </div>
+
+      <div class="bg-radar-surface/80 border border-radar-border rounded-xl p-3.5 flex flex-col justify-between">
+        <div class="flex items-center justify-between text-slate-400 text-xs mb-1">
+          <span>Última Consulta</span>
+          <span id="syncPulse" class="h-2 w-2 rounded-full bg-slate-600"></span>
+        </div>
+        <div class="flex flex-col">
+          <div class="text-xs sm:text-sm font-mono font-bold text-slate-400 truncate flex items-center gap-1.5" id="syncStatusText">
+            <span>Aguardando...</span>
+          </div>
+          <span class="text-[10px] text-slate-500 font-mono mt-0.5" id="lastSyncTime">--:--:--</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Lista de Notícias -->
+    <section class="flex-1 flex flex-col">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
+        <div class="flex items-center space-x-2.5">
+          <span class="relative flex h-2.5 w-2.5">
+            <span id="livePing" class="hidden animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+          </span>
+          <h2 class="text-xs sm:text-sm font-bold text-slate-200 uppercase tracking-wider font-mono">
+            Feed Cronológico em Tempo Real
+          </h2>
+          <span id="newItemsBadge" class="hidden text-[11px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 animate-pulse">
+            0 novas
+          </span>
+        </div>
+        <button type="button" id="clearFeedBtn" class="text-xs text-slate-400 hover:text-rose-400 transition flex items-center gap-1 cursor-pointer">
+          <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+          Limpar feed
+        </button>
+      </div>
+
+      <div id="newsFeedList" class="flex flex-col gap-3 min-h-[360px]">
+        <div id="emptyState" class="flex flex-col items-center justify-center py-16 px-4 text-center border border-dashed border-slate-800 rounded-2xl bg-radar-surface/40">
+          <div class="w-14 h-14 rounded-2xl bg-slate-800/80 flex items-center justify-center text-slate-400 mb-3 border border-slate-700">
+            <i data-lucide="satellite" class="w-7 h-7 text-emerald-400"></i>
+          </div>
+          <h3 class="text-sm font-semibold text-slate-200 mb-1">Radar Pronto</h3>
+          <p class="text-xs text-slate-400 max-w-md mb-4 leading-relaxed">
+            Clique no botão abaixo para iniciar a recepção contínua de matérias.
+          </p>
+          <button type="button" id="startNowBtn" class="px-5 py-2.5 text-xs font-bold uppercase tracking-wider rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white transition shadow-lg cursor-pointer">
+            Iniciar Radar Agora
+          </button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="border-t border-radar-border bg-radar-bg py-4 text-center text-xs text-slate-500 font-mono">
+    Radar Intel Live • Conexão Própria via Cloudflare Worker
+  </footer>
+
+  <script>
+    const WORKER_BASE = "https://lingering-bush-177b.paradaobrigatoriaestamparia.workers.dev/?url=";
+
+    const state = {
+      isMonitoring: false,
+      soundEnabled: true,
+      intervalSeconds: 60,
+      countdown: 60,
+      countdownTimerId: null,
+      mode: 'global', // 'global' = Plantão Geral por padrão
+      currentKeyword: '',
+      displayLimit: 5,
+      isFetching: false,
+      articles: []
+    };
+
+    const elements = {
+      modeSwitchBtn: document.getElementById('modeSwitchBtn'),
+      modeSwitchThumb: document.getElementById('modeSwitchThumb'),
+      modeLabel: document.getElementById('modeLabel'),
+      modeDescription: document.getElementById('modeDescription'),
+      keywordInput: document.getElementById('keywordInput'),
+      displayLimitSelect: document.getElementById('displayLimitSelect'),
+      intervalSelect: document.getElementById('intervalSelect'),
+      toggleMonitorBtn: document.getElementById('toggleMonitorBtn'),
+      monitorBtnText: document.getElementById('monitorBtnText'),
+      monitorIcon: document.getElementById('monitorIcon'),
+      manualCheckBtn: document.getElementById('manualCheckBtn'),
+      manualRefreshIcon: document.getElementById('manualRefreshIcon'),
+      toggleAudioBtn: document.getElementById('toggleAudioBtn'),
+      audioIcon: document.getElementById('audioIcon'),
+      audioStatusText: document.getElementById('audioStatusText'),
+      testAudioBtn: document.getElementById('testAudioBtn'),
+      radarStateText: document.getElementById('radarStateText'),
+      statusPulse: document.getElementById('statusPulse'),
+      countdownText: document.getElementById('countdownText'),
+      totalNewsCount: document.getElementById('totalNewsCount'),
+      syncStatusText: document.getElementById('syncStatusText'),
+      syncPulse: document.getElementById('syncPulse'),
+      lastSyncTime: document.getElementById('lastSyncTime'),
+      livePing: document.getElementById('livePing'),
+      newItemsBadge: document.getElementById('newItemsBadge'),
+      newsFeedList: document.getElementById('newsFeedList'),
+      emptyState: document.getElementById('emptyState'),
+      clearFeedBtn: document.getElementById('clearFeedBtn'),
+      startNowBtn: document.getElementById('startNowBtn')
+    };
+
+    let audioCtx = null;
+    function getAudioContext() {
+      try {
+        if (!audioCtx) {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if (AudioContextClass) audioCtx = new AudioContextClass();
+        }
+        if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+      } catch (err) {
+        console.warn('Audio:', err);
+      }
+      return audioCtx;
+    }
+
+    function playChime() {
+      if (!state.soundEnabled) return;
+      try {
+        const ctx = getAudioContext();
+        if (!ctx) return;
+        const now = ctx.currentTime;
+        const notes = [{ freq: 880, start: 0, dur: 0.22 }, { freq: 1174.66, start: 0.08, dur: 0.35 }];
+        notes.forEach(note => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(note.freq, now + note.start);
+          gain.gain.setValueAtTime(0.001, now + note.start);
+          gain.gain.exponentialRampToValueAtTime(0.25, now + note.start + 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + note.start + note.dur);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now + note.start);
+          osc.stop(now + note.start + note.dur + 0.05);
+        });
+      } catch (err) {
+        console.warn('Som:', err);
+      }
+    }
+
+    function sanitizeKeyword(input) {
+      return (input || '').trim().toLowerCase();
+    }
+
+    function parseTimestamp(rawDate) {
+      if (!rawDate) return 0;
+      let parsed = Date.parse(rawDate);
+      if (isNaN(parsed)) return 0;
+
+      // Trava de fuso horário: limita ao momento presente
+      const now = Date.now();
+      if (parsed > now) {
+        return now;
+      }
+
+      return parsed;
+    }
+
+    function getRelativeTime(timestamp) {
+      if (!timestamp) return 'recentemente';
+      const diffSec = Math.max(0, Math.floor((Date.now() - timestamp) / 1000));
+      if (diffSec < 45) return 'agora há pouco';
+      const diffMin = Math.floor(diffSec / 60);
+      if (diffMin < 60) return `há ${diffMin} min`;
+      const diffHr = Math.floor(diffMin / 60);
+      if (diffHr < 24) return `há ${diffHr} h`;
+      return `há ${Math.floor(diffHr / 24)} d`;
+    }
+
+    function formatDateExact(timestamp) {
+      if (!timestamp) return '--:--';
+      const date = new Date(timestamp);
+      return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) + ' • ' +
+             date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+    }
+
+    function cleanHtmlText(rawHtml) {
+      if (!rawHtml) return '';
+      const doc = new DOMParser().parseFromString(rawHtml, 'text/html');
+      return (doc.body.textContent || '').trim();
+    }
+
+    function escapeHtml(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function setConnectionStatus(status, detail = '') {
+      const now = new Date().toLocaleTimeString('pt-BR');
+      elements.lastSyncTime.textContent = now;
+
+      if (status === 'loading') {
+        elements.syncPulse.className = 'h-2 w-2 rounded-full bg-amber-400 animate-pulse';
+        elements.syncStatusText.className = 'text-xs sm:text-sm font-mono font-bold text-amber-400 truncate flex items-center gap-1.5';
+        elements.syncStatusText.innerHTML = `<i data-lucide="loader" class="w-3.5 h-3.5 animate-spin"></i> Consultando...`;
+      } else if (status === 'success') {
+        elements.syncPulse.className = 'h-2 w-2 rounded-full bg-emerald-400';
+        elements.syncStatusText.className = 'text-xs sm:text-sm font-mono font-bold text-emerald-400 truncate flex items-center gap-1.5';
+        elements.syncStatusText.innerHTML = `<i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i> ${detail || 'Worker OK'}`;
+      } else if (status === 'error') {
+        elements.syncPulse.className = 'h-2 w-2 rounded-full bg-rose-500 animate-ping';
+        elements.syncStatusText.className = 'text-xs sm:text-sm font-mono font-bold text-rose-400 truncate flex items-center gap-1.5';
+        elements.syncStatusText.innerHTML = `<i data-lucide="alert-circle" class="w-3.5 h-3.5"></i> Falha (${detail || 'Erro'})`;
+      }
+      lucide.createIcons();
+    }
+
+    async function fetchXmlViaWorker(targetUrl, sourceLabel) {
+      const salt = `${Date.now()}_${Math.floor(Math.random() * 100000)}`;
+      const separator = targetUrl.includes('?') ? '&' : '?';
+      const cleanTarget = `${targetUrl}${separator}_cb=${salt}`;
+      const workerUrl = `${WORKER_BASE}${encodeURIComponent(cleanTarget)}`;
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 9000);
+
+      const res = await fetch(workerUrl, { signal: controller.signal });
+      clearTimeout(timeoutId);
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      const xmlText = await res.text();
+      const xml = new DOMParser().parseFromString(xmlText, 'text/xml');
+      const items = Array.from(xml.querySelectorAll('item, entry'));
+
+      return items.map(el => {
+        const rawDate = 
+          el.querySelector('pubDate')?.textContent ||
+          el.querySelector('dc\\:date, date')?.textContent ||
+          el.querySelector('published')?.textContent ||
+          el.querySelector('updated')?.textContent || '';
+
+        const title = (el.querySelector('title')?.textContent || 'Sem título').trim();
+        const ts = parseTimestamp(rawDate);
+        
+        let rawLink = (el.querySelector('link')?.textContent || el.querySelector('link')?.getAttribute('href') || '#').trim();
+        let cleanLink = rawLink.split('?')[0].split('#')[0];
+        const cleanId = (cleanLink !== '#' ? cleanLink : title).toLowerCase().replace(/[^a-z0-9]/g, '');
+        const desc = cleanHtmlText(el.querySelector('description, summary, content')?.textContent || '');
+
+        return {
+          id: cleanId,
+          title: title,
+          link: rawLink !== '#' ? rawLink : '#',
+          timestamp: ts,
+          source: sourceLabel,
+          description: desc
+        };
+      });
+    }
+
+    async function fetchFeedArticles() {
+      const isGlobal = (state.mode === 'global');
+      const filterTerm = sanitizeKeyword(elements.keywordInput.value);
+
+      setConnectionStatus('loading');
+
+      const targetFeeds = [
+        { url: 'https://g1.globo.com/rss/g1/sp/campinas-regiao/', label: 'G1 Campinas' },
+        { url: 'https://g1.globo.com/rss/g1/', label: 'G1 Geral' },
+        { url: 'https://g1.globo.com/rss/g1/sao-paulo/', label: 'G1 SP' },
+        { url: 'https://www.cnnbrasil.com.br/feed/', label: 'CNN Brasil' },
+        { url: 'https://feeds.folha.uol.com.br/emcimadahora/rss091.xml', label: 'Folha' },
+        { url: 'https://rss.uol.com.br/feed/noticias.xml', label: 'UOL' },
+        { url: 'https://www.metropoles.com/feed', label: 'Metrópoles' },
+        { url: 'https://www.poder360.com.br/feed/', label: 'Poder360' },
+        { url: 'https://g1.globo.com/rss/g1/economia/', label: 'G1 Economia' },
+        { url: 'https://www.infomoney.com.br/feed/', label: 'InfoMoney' },
+        { url: 'https://br.investing.com/rss/news.rss', label: 'Investing' },
+        { url: 'https://g1.globo.com/rss/g1/carros/', label: 'G1 Auto' },
+        { url: 'https://rss.tecmundo.com.br/feed', label: 'TecMundo' },
+        { url: 'https://br.cointelegraph.com/rss', label: 'Cointelegraph BR' },
+        { url: 'https://portaldobitcoin.uol.com.br/feed/', label: 'Portal do Bitcoin' },
+        { url: 'https://br.beincrypto.com/feed/', label: 'BeInCrypto' },
+        { url: 'https://livecoins.com.br/feed/', label: 'Livecoins' }
+      ];
+
+      try {
+        const fetchTasks = targetFeeds.map(f => 
+          fetchXmlViaWorker(f.url, f.label).catch(() => [])
+        );
+
+        const results = await Promise.all(fetchTasks);
+        let allArticles = results.flat();
+
+        if (allArticles.length === 0) {
+          setConnectionStatus('error', 'Feeds Vazios');
+          return [];
+        }
+
+        if (!isGlobal && filterTerm) {
+          allArticles = allArticles.filter(item => {
+            const haystack = (item.title + ' ' + item.description).toLowerCase();
+            return haystack.includes(filterTerm);
+          });
+        }
+
+        setConnectionStatus('success', 'Worker Ativo');
+        return allArticles;
+
+      } catch (err) {
+        setConnectionStatus('error', err.message || 'Rede');
+        return [];
+      }
+    }
+
+    function renderFeed() {
+      state.articles.sort((a, b) => b.timestamp - a.timestamp);
+
+      const visibleArticles = state.articles.slice(0, state.displayLimit);
+      elements.totalNewsCount.textContent = `${visibleArticles.length} de ${state.articles.length}`;
+
+      if (visibleArticles.length === 0) {
+        if (elements.emptyState) {
+          elements.newsFeedList.innerHTML = '';
+          elements.newsFeedList.appendChild(elements.emptyState);
+          elements.emptyState.classList.remove('hidden');
+        }
+        return;
+      }
+
+      if (elements.emptyState) elements.emptyState.classList.add('hidden');
+      elements.newsFeedList.innerHTML = '';
+
+      visibleArticles.forEach(item => {
+        const card = document.createElement('article');
+        const relativeTime = getRelativeTime(item.timestamp);
+        const exactTime = formatDateExact(item.timestamp);
+
+        card.className = `group bg-radar-card border rounded-xl p-4 transition-all duration-300 hover:border-slate-600 hover:bg-slate-800/60 shadow-md ${
+          item.isNew
+            ? 'border-emerald-500/80 bg-emerald-950/25 ring-1 ring-emerald-500/60'
+            : 'border-radar-border'
+        }`;
+
+        card.innerHTML = `
+          <div class="flex flex-col gap-2.5">
+            <div class="flex items-center justify-between gap-2 text-xs">
+              <div class="flex items-center space-x-2 truncate">
+                <span class="px-2 py-0.5 rounded font-mono text-[11px] bg-slate-900 text-slate-300 border border-slate-700/80 font-semibold flex items-center gap-1 shrink-0">
+                  <i data-lucide="zap" class="w-3 h-3 text-emerald-400"></i>
+                  ${escapeHtml(item.source)}
+                </span>
+                <span class="text-emerald-400/90 font-mono text-[11px] font-semibold flex items-center gap-1">
+                  <i data-lucide="clock" class="w-3 h-3 text-slate-500"></i>
+                  ${relativeTime}
+                </span>
+                <span class="text-slate-500 font-mono text-[10px] hidden sm:inline">(${exactTime})</span>
+              </div>
+              ${item.isNew ? `
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-extrabold bg-emerald-500 text-slate-950 tracking-wider">
+                  NOVA
+                </span>
+              ` : ''}
+            </div>
+
+            <a href="${item.link}" target="_blank" rel="noopener noreferrer nofollow" class="text-sm sm:text-base font-bold text-slate-100 hover:text-emerald-400 transition-colors line-clamp-2 leading-snug">
+              ${escapeHtml(item.title)}
+            </a>
+
+            ${item.description ? `
+              <p class="text-xs text-slate-400 line-clamp-2 leading-relaxed">
+                ${escapeHtml(item.description)}
+              </p>
+            ` : ''}
+
+            <div class="pt-2 flex items-center justify-between border-t border-slate-800/80 mt-1 text-xs">
+              <a href="${item.link}" target="_blank" rel="noopener noreferrer nofollow" class="inline-flex items-center text-xs font-semibold text-emerald-400 hover:text-emerald-300 transition gap-1.5 group-hover:underline">
+                <span>Abrir matéria na íntegra</span>
+                <i data-lucide="arrow-up-right" class="w-3.5 h-3.5"></i>
+              </a>
+            </div>
+          </div>
+        `;
+        elements.newsFeedList.appendChild(card);
+      });
+
+      lucide.createIcons();
+    }
+
+    async function performScan() {
+      if (state.isFetching) return;
+      state.isFetching = true;
+      elements.manualRefreshIcon.classList.add('animate-spin');
+
+      try {
+        const fetchedItems = await fetchFeedArticles();
+        const existingIds = new Set(state.articles.map(a => a.id));
+        const isFirstLoad = state.articles.length === 0;
+        
+        let newlyAddedIds = new Set();
+
+        state.articles.forEach(a => { a.isNew = false; });
+
+        fetchedItems.forEach(item => {
+          if (!existingIds.has(item.id)) {
+            state.articles.push({ ...item, isNew: false });
+            existingIds.add(item.id);
+            if (!isFirstLoad) {
+              newlyAddedIds.add(item.id);
+            }
+          }
+        });
+
+        state.articles.sort((a, b) => b.timestamp - a.timestamp);
+
+        if (state.articles.length > 200) {
+          state.articles = state.articles.slice(0, 200);
+        }
+
+        const visibleArticles = state.articles.slice(0, state.displayLimit);
+        
+        let visibleNewCount = 0;
+        visibleArticles.forEach(item => {
+          if (newlyAddedIds.has(item.id)) {
+            item.isNew = true;
+            visibleNewCount++;
+          }
+        });
+
+        renderFeed();
+
+        if (visibleNewCount > 0 && !isFirstLoad) {
+          playChime();
+          elements.newItemsBadge.textContent = `+${visibleNewCount} nova(s) no topo`;
+          elements.newItemsBadge.classList.remove('hidden');
+          setTimeout(() => elements.newItemsBadge.classList.add('hidden'), 5000);
+        }
+      } catch (err) {
+        setConnectionStatus('error', 'Processamento');
+      } finally {
+        state.isFetching = false;
+        elements.manualRefreshIcon.classList.remove('animate-spin');
+      }
+    }
+
+    function startMonitoring() {
+      if (state.mode === 'keyword') {
+        const cleanTerm = sanitizeKeyword(elements.keywordInput.value);
+        if (!cleanTerm) {
+          elements.keywordInput.focus();
+          return;
+        }
+        if (cleanTerm !== state.currentKeyword) {
+          state.currentKeyword = cleanTerm;
+          state.articles = [];
+          renderFeed();
+          elements.totalNewsCount.textContent = '0';
+        }
+      }
+
+      getAudioContext();
+      state.isMonitoring = true;
+      state.intervalSeconds = parseInt(elements.intervalSelect.value, 10);
+      state.displayLimit = parseInt(elements.displayLimitSelect.value, 10);
+      state.countdown = state.intervalSeconds;
+
+      elements.monitorBtnText.textContent = 'Pausar Radar';
+      elements.monitorIcon.setAttribute('data-lucide', 'pause');
+      elements.toggleMonitorBtn.classList.remove('bg-emerald-600', 'hover:bg-emerald-500');
+      elements.toggleMonitorBtn.classList.add('bg-amber-600', 'hover:bg-amber-500');
+
+      elements.radarStateText.innerHTML = `<span class="text-emerald-400 font-bold font-mono">MONITORANDO</span>`;
+      elements.statusPulse.className = 'h-2 w-2 rounded-full bg-emerald-400 animate-ping';
+      elements.livePing.classList.remove('hidden');
+      elements.countdownText.textContent = `${state.countdown}s`;
+
+      lucide.createIcons();
+      performScan();
+
+      clearInterval(state.countdownTimerId);
+      state.countdownTimerId = setInterval(() => {
+        if (!state.isMonitoring) return;
+        state.countdown--;
+        elements.countdownText.textContent = `${state.countdown}s`;
+        if (state.countdown <= 0) {
+          state.countdown = state.intervalSeconds;
+          performScan();
+        }
+      }, 1000);
+    }
+
+    function stopMonitoring() {
+      state.isMonitoring = false;
+      clearInterval(state.countdownTimerId);
+      elements.monitorBtnText.textContent = 'Iniciar Radar';
+      elements.monitorIcon.setAttribute('data-lucide', 'play');
+      elements.toggleMonitorBtn.classList.remove('bg-amber-600', 'hover:bg-amber-500');
+      elements.toggleMonitorBtn.classList.add('bg-emerald-600', 'hover:bg-emerald-500');
+      elements.radarStateText.textContent = 'PAUSADO';
+      elements.statusPulse.className = 'h-2 w-2 rounded-full bg-slate-600';
+      elements.livePing.classList.add('hidden');
+      elements.countdownText.textContent = '--';
+      lucide.createIcons();
+    }
+
+    elements.modeSwitchBtn.addEventListener('click', () => {
+      const isCurrentlyKeyword = (state.mode === 'keyword');
+      state.mode = isCurrentlyKeyword ? 'global' : 'keyword';
+
+      if (state.mode === 'global') {
+        elements.modeSwitchBtn.classList.replace('bg-slate-800', 'bg-emerald-600');
+        elements.modeSwitchThumb.classList.replace('translate-x-0', 'translate-x-7');
+        elements.modeLabel.textContent = 'PLANTÃO GERAL';
+        elements.modeLabel.className = 'text-xs font-mono font-bold px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-500/50';
+        elements.modeDescription.textContent = 'Monitorando todo o fluxo das fontes sem filtros.';
+        elements.keywordInput.disabled = true;
+      } else {
+        elements.modeSwitchBtn.classList.replace('bg-emerald-600', 'bg-slate-800');
+        elements.modeSwitchThumb.classList.replace('translate-x-7', 'translate-x-0');
+        elements.modeLabel.textContent = 'TERMO ESPECÍFICO';
+        elements.modeLabel.className = 'text-xs font-mono font-bold px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700';
+        elements.modeDescription.textContent = 'Filtra as notícias pelos termos digitados abaixo.';
+        elements.keywordInput.disabled = false;
+      }
+
+      state.articles = [];
+      elements.totalNewsCount.textContent = '0';
+      renderFeed();
+      if (state.isMonitoring) performScan();
+    });
+
+    elements.toggleMonitorBtn.addEventListener('click', () => state.isMonitoring ? stopMonitoring() : startMonitoring());
+    elements.startNowBtn.addEventListener('click', () => startMonitoring());
+    elements.manualCheckBtn.addEventListener('click', () => { getAudioContext(); performScan(); });
+    elements.keywordInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') startMonitoring(); });
+    
+    elements.displayLimitSelect.addEventListener('change', (e) => {
+      state.displayLimit = parseInt(e.target.value, 10);
+      renderFeed();
+    });
+
+    elements.intervalSelect.addEventListener('change', (e) => {
+      state.intervalSeconds = parseInt(e.target.value, 10);
+      if (state.isMonitoring) state.countdown = state.intervalSeconds;
+    });
+
+    elements.toggleAudioBtn.addEventListener('click', () => {
+      getAudioContext();
+      state.soundEnabled = !state.soundEnabled;
+      elements.audioIcon.setAttribute('data-lucide', state.soundEnabled ? 'volume-2' : 'volume-x');
+      elements.audioStatusText.textContent = state.soundEnabled ? 'Som: Ativo' : 'Som: Mudo';
+      lucide.createIcons();
+    });
+
+    elements.testAudioBtn.addEventListener('click', () => { getAudioContext(); playChime(); });
+    elements.clearFeedBtn.addEventListener('click', () => {
+      state.articles = [];
+      elements.totalNewsCount.textContent = '0';
+      renderFeed();
+    });
+
+    lucide.createIcons();
+  </script>
+</body>
+</html>

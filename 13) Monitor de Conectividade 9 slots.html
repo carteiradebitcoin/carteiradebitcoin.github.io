@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard de Monitoramento de Rede - 9 Hosts</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            darkbg: '#0a0d14',
+            darkcard: '#111726',
+            darkborder: '#1e293b',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #07090e;
+      color: #e2e8f0;
+      font-family: 'Inter', sans-serif;
+    }
+    .status-pulse-online {
+      box-shadow: 0 0 12px rgba(34, 197, 94, 0.45);
+    }
+    .status-pulse-offline {
+      box-shadow: 0 0 12px rgba(239, 68, 68, 0.45);
+    }
+    .status-pulse-checking {
+      box-shadow: 0 0 12px rgba(234, 179, 8, 0.45);
+    }
+    .history-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 9999px;
+      display: inline-block;
+      transition: transform 0.2s;
+    }
+    .history-dot:hover {
+      transform: scale(1.3);
+    }
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0d121f;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1e293b;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #334155;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col p-3 md:p-6 antialiased selection:bg-cyan-500 selection:text-white">
+
+  <div class="max-w-7xl mx-auto w-full flex-grow flex flex-col gap-5">
+    
+    <!-- Top Bar: Header & Controls -->
+    <header class="bg-darkcard border border-darkborder rounded-2xl p-4 md:p-6 shadow-xl relative overflow-hidden backdrop-blur-md">
+      <div class="absolute -right-16 -top-16 w-48 h-48 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
+      
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <!-- Title & Subtitle -->
+        <div>
+          <div class="flex items-center gap-3">
+            <div class="h-9 w-9 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20">
+              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </div>
+            <div>
+              <h1 class="text-xl md:text-2xl font-bold tracking-tight text-white flex items-center gap-2">
+                NetPulse <span class="text-cyan-400 font-mono text-sm px-2 py-0.5 rounded bg-cyan-950/60 border border-cyan-800/40">9-SLOT NOC</span>
+              </h1>
+              <p class="text-xs md:text-sm text-slate-400">Monitor de Conectividade Web HTTP/RTT</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Global Control Buttons -->
+        <div class="flex flex-wrap items-center gap-2">
+          <!-- Interval Selector -->
+          <div class="flex items-center bg-slate-900 border border-darkborder rounded-xl px-3 py-1.5 text-xs font-medium text-slate-300">
+            <span class="mr-2 text-slate-400">Ciclo:</span>
+            <select id="intervalSelect" class="bg-transparent text-cyan-400 focus:outline-none cursor-pointer font-mono">
+              <option value="5" class="bg-slate-900 text-slate-200">5 seg</option>
+              <option value="10" selected class="bg-slate-900 text-slate-200">10 seg</option>
+              <option value="20" class="bg-slate-900 text-slate-200">20 seg</option>
+              <option value="30" class="bg-slate-900 text-slate-200">30 seg</option>
+              <option value="60" class="bg-slate-900 text-slate-200">60 seg</option>
+            </select>
+          </div>
+
+          <!-- Ping All Button -->
+          <button id="btnPingAll" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-1.5 transition active:scale-95 border border-slate-700">
+            <svg class="w-3.5 h-3.5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Ping Todos
+          </button>
+
+          <!-- Start / Pause Monitoring Button -->
+          <button id="btnToggleLoop" class="px-3.5 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold flex items-center gap-1.5 shadow-lg shadow-cyan-600/20 transition active:scale-95">
+            <span id="loopStatusDot" class="w-2 h-2 rounded-full bg-white animate-ping"></span>
+            <span id="btnLoopText">Monitorando</span>
+          </button>
+
+          <!-- Guardar HTML Atualizado (Nuvem / Portabilidade) -->
+          <button id="btnSaveHtml" onclick="downloadSelfHtml()" title="Salva o arquivo HTML com as configurações dos 9 slots gravadas no código-fonte" class="px-3 py-2 rounded-xl bg-emerald-950/50 hover:bg-emerald-600 text-emerald-400 hover:text-white text-xs font-semibold border border-emerald-800/60 flex items-center gap-1.5 transition active:scale-95">
+            💾 <span>Guardar HTML</span>
+          </button>
+
+          <!-- Zerar Tudo -->
+          <button id="btnClearAll" onclick="clearAllSlots()" title="Limpar todos os 9 slots" class="px-3 py-2 rounded-xl bg-rose-950/40 hover:bg-rose-600 text-rose-400 hover:text-white text-xs font-semibold border border-rose-800/60 flex items-center gap-1 transition active:scale-95">
+            🗑️ <span>Zerar</span>
+          </button>
+
+          <!-- Preset Defaults -->
+          <button id="btnPresetDefaults" title="Preencher com exemplos populares" class="px-2.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-200 text-xs border border-darkborder transition">
+            Exemplos
+          </button>
+        </div>
+      </div>
+
+      <!-- Technical Browser Limit Warning -->
+      <div class="mt-4 pt-3 border-t border-slate-800/80 flex items-start gap-2.5 text-[11px] text-slate-400 bg-slate-900/40 p-2.5 rounded-lg border border-slate-800">
+        <svg class="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <span>
+          <strong class="text-slate-300">Nota técnica:</strong> Monitoramento realizado via <em>HTTP/HTTPS Probe</em> com medição de latência RTT em milissegundos. Endereços sem protocolo recebem <code>https://</code> automaticamente. Use <strong>Guardar HTML</strong> para sincronizar os hosts entre diferentes PCs.
+        </span>
+      </div>
+    </header>
+
+    <!-- Grid of 9 Monitoring Slots -->
+    <main id="slotsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 flex-grow">
+      <!-- Cards 1 to 9 will be injected by JavaScript -->
+    </main>
+
+    <!-- Footer Stats & Export Info -->
+    <footer class="text-center text-xs text-slate-500 py-2 flex flex-col sm:flex-row items-center justify-between gap-2 border-t border-slate-900">
+      <div class="flex items-center gap-2">
+        <span class="inline-block w-2 h-2 rounded-full bg-emerald-500"></span> Online
+        <span class="inline-block w-2 h-2 rounded-full bg-rose-500 ml-2"></span> Offline / Timeout
+        <span class="inline-block w-2 h-2 rounded-full bg-amber-400 ml-2"></span> Checando
+        <span class="inline-block w-2 h-2 rounded-full bg-slate-600 ml-2"></span> Vazio
+      </div>
+      <div>
+        Persistência dupla: LocalStorage + Exportação direta em HTML
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    const TOTAL_SLOTS = 9;
+    const STORAGE_KEY = 'netpulse_slots_config_v1';
+    const PROBE_TIMEOUT_MS = 4500;
+
+    // =========================================================================
+    // SLOTS PADRÃO INICIAIS (Regravados ao salvar o arquivo HTML)
+    // =========================================================================
+    /* __INITIAL_SLOTS_DATA_PLACEHOLDER__ */
+    let defaultSlots = [
+      { id: 1, name: "Google DNS", host: "https://8.8.8.8" },
+      { id: 2, name: "Cloudflare 1.1.1.1", host: "https://one.one.one.one" },
+      { id: 3, name: "Portal Google", host: "https://www.google.com" },
+      { id: 4, name: "GitHub", host: "https://github.com" },
+      { id: 5, name: "Wikipedia Org", host: "https://www.wikipedia.org" },
+      { id: 6, name: "Microsoft", host: "https://www.microsoft.com" },
+      { id: 7, name: "Roteador Local (Ex)", host: "http://192.168.1.1" },
+      { id: 8, name: "Gateway Local (Ex)", host: "http://192.168.0.1" },
+      { id: 9, name: "Servidor Teste", host: "https://httpbin.org/status/200" }
+    ];
+
+    let slotsData = [];
+    let isMonitoring = true;
+    let monitorTimer = null;
+
+    function loadSlotsData() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved !== null) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length === TOTAL_SLOTS) {
+            slotsData = parsed.map(item => ({
+              ...item,
+              status: 'idle',
+              latency: null,
+              lastChecked: null,
+              history: item.history || []
+            }));
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn("Falha ao ler localStorage", err);
+      }
+
+      // Usa os dados padrão embutidos no código
+      slotsData = defaultSlots.map((item, idx) => ({
+        id: item.id || (idx + 1),
+        name: item.name || '',
+        host: item.host || '',
+        status: 'idle',
+        latency: null,
+        lastChecked: null,
+        history: []
+      }));
+      saveSlotsToStorage();
+    }
+
+    function saveSlotsToStorage() {
+      try {
+        const toSave = slotsData.map(s => ({
+          id: s.id,
+          name: s.name,
+          host: s.host,
+          history: (s.history || []).slice(-10)
+        }));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
+      } catch (err) {
+        console.error("Erro ao salvar no localStorage", err);
+      }
+    }
+
+    // =========================================================================
+    // PERSISTÊNCIA SELF-CONTAINED (EXPORTAÇÃO DE HTML PARA NUVEM/OUTRO PC)
+    // =========================================================================
+    function downloadSelfHtml() {
+      let htmlContent = document.documentElement.outerHTML;
+
+      // Extrai apenas as configurações essenciais (id, nome e host), sem o histórico volátil
+      const cleanSlots = slotsData.map(s => ({
+        id: s.id,
+        name: s.name || '',
+        host: s.host || ''
+      }));
+
+      const jsonString = JSON.stringify(cleanSlots, null, 2);
+      const replacement = `let defaultSlots = ${jsonString};`;
+
+      htmlContent = htmlContent.replace(/let defaultSlots = \[[\s\S]*?\];/, replacement);
+
+      const blob = new Blob(["<!DOCTYPE html>\n<html lang=\"pt-BR\" class=\"dark\">\n" + htmlContent + "\n</html>"], { type: 'text/html;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `13) Monitor de Conectividade 9 slots.html`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // =========================================================================
+    // ZERAR TODOS OS SLOTS
+    // =========================================================================
+    function clearAllSlots() {
+      const confirm1 = confirm("⚠️ Deseja realmente zerar todos os 9 slots de monitoramento?");
+      if (!confirm1) return;
+
+      const confirm2 = confirm("Todos os nomes, endereços IP/URLs e históricos serão apagados. Confirmar?");
+      if (!confirm2) return;
+
+      slotsData = Array.from({ length: TOTAL_SLOTS }, (_, idx) => ({
+        id: idx + 1,
+        name: '',
+        host: '',
+        status: 'idle',
+        latency: null,
+        lastChecked: null,
+        history: []
+      }));
+
+      saveSlotsToStorage();
+      renderGrid();
+    }
+
+    function renderGrid() {
+      const container = document.getElementById('slotsGrid');
+      container.innerHTML = '';
+
+      slotsData.forEach((slot) => {
+        const card = document.createElement('div');
+        card.id = `slot-card-${slot.id}`;
+        card.className = "bg-darkcard border border-darkborder rounded-2xl p-4 flex flex-col justify-between shadow-lg relative transition-all duration-300 hover:border-slate-700";
+
+        let statusBadgeClass = "bg-slate-800 text-slate-400 border-slate-700";
+        let statusText = "Inativo / Aguardando";
+
+        if (slot.status === 'checking') {
+          statusBadgeClass = "bg-amber-950/70 text-amber-300 border-amber-800 status-pulse-checking";
+          statusText = "Checando...";
+        } else if (slot.status === 'online') {
+          statusBadgeClass = "bg-emerald-950/70 text-emerald-400 border-emerald-800 status-pulse-online";
+          statusText = "Online";
+        } else if (slot.status === 'offline') {
+          statusBadgeClass = "bg-rose-950/70 text-rose-400 border-rose-800 status-pulse-offline";
+          statusText = "Offline / Timeout";
+        }
+
+        const latencyDisplay = (slot.latency !== null && slot.status === 'online')
+          ? `<span class="font-mono text-emerald-400 font-bold">${slot.latency}ms</span>`
+          : (slot.status === 'offline' ? `<span class="font-mono text-rose-400 font-semibold">Falha</span>` : `<span class="text-slate-500 font-mono">-- ms</span>`);
+
+        const lastCheckTime = slot.lastChecked 
+          ? new Date(slot.lastChecked).toLocaleTimeString() 
+          : 'Nunca';
+
+        let historyDotsHtml = '';
+        if (slot.history && slot.history.length > 0) {
+          historyDotsHtml = slot.history.slice(-8).map(res => {
+            const colorClass = res.ok ? 'bg-emerald-500 shadow-sm shadow-emerald-500/50' : 'bg-rose-500 shadow-sm shadow-rose-500/50';
+            const title = `${res.ok ? 'OK' : 'Falha'} (${res.latency !== null ? res.latency + 'ms' : 'Timeout'}) em ${new Date(res.time).toLocaleTimeString()}`;
+            return `<span class="history-dot ${colorClass}" title="${title}"></span>`;
+          }).join('');
+        } else {
+          historyDotsHtml = '<span class="text-[10px] text-slate-600 font-mono">Sem histórico</span>';
+        }
+
+        card.innerHTML = `
+          <!-- Slot Header -->
+          <div class="flex items-center justify-between gap-2 mb-3">
+            <div class="flex items-center gap-2">
+              <span class="w-6 h-6 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-xs font-mono font-bold text-cyan-400">
+                #${slot.id}
+              </span>
+              <input 
+                type="text" 
+                placeholder="Rótulo (ex: Gateway)" 
+                value="${escapeHtml(slot.name || '')}" 
+                data-id="${slot.id}" 
+                data-field="name"
+                class="slot-name-input bg-transparent text-sm font-semibold text-slate-200 focus:outline-none border-b border-transparent focus:border-cyan-500 px-1 py-0.5 w-36 truncate"
+              />
+            </div>
+            
+            <div id="badge-${slot.id}" class="px-2.5 py-0.5 rounded-full text-[11px] font-medium border flex items-center gap-1.5 transition-all ${statusBadgeClass}">
+              <span class="w-1.5 h-1.5 rounded-full ${slot.status === 'online' ? 'bg-emerald-400' : (slot.status === 'offline' ? 'bg-rose-400' : (slot.status === 'checking' ? 'bg-amber-400' : 'bg-slate-500'))}"></span>
+              <span id="badge-text-${slot.id}">${statusText}</span>
+            </div>
+          </div>
+
+          <!-- Input Host/IP field -->
+          <div class="mb-4">
+            <label class="block text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-1">Host / IP / Endereço</label>
+            <div class="relative flex items-center">
+              <input 
+                type="text" 
+                placeholder="ex: 192.168.1.1 ou google.com" 
+                value="${escapeHtml(slot.host || '')}" 
+                data-id="${slot.id}" 
+                data-field="host"
+                class="slot-host-input w-full bg-slate-900/90 border border-darkborder focus:border-cyan-500 text-slate-100 font-mono text-xs rounded-xl px-3 py-2 focus:outline-none pr-8 transition shadow-inner"
+              />
+              <button 
+                title="Limpar Slot"
+                onclick="clearSlot(${slot.id})"
+                class="absolute right-2 text-slate-500 hover:text-slate-300 p-1">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Latency & Metric Panel -->
+          <div class="bg-slate-950/60 border border-slate-900 rounded-xl p-2.5 flex items-center justify-between mb-3">
+            <div>
+              <div class="text-[10px] text-slate-400 uppercase font-mono">Latência</div>
+              <div id="latency-${slot.id}" class="text-sm font-medium mt-0.5">
+                ${latencyDisplay}
+              </div>
+            </div>
+            <div class="text-right">
+              <div class="text-[10px] text-slate-400 uppercase font-mono">Último Check</div>
+              <div id="lastcheck-${slot.id}" class="text-xs font-mono text-slate-300 mt-0.5">
+                ${lastCheckTime}
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom: Ping History & Single Ping Action -->
+          <div class="flex items-center justify-between pt-2 border-t border-slate-800/60">
+            <div class="flex flex-col">
+              <span class="text-[9px] font-mono text-slate-500 uppercase tracking-wider mb-1">Histórico</span>
+              <div id="history-${slot.id}" class="flex items-center gap-1.5 h-3">
+                ${historyDotsHtml}
+              </div>
+            </div>
+
+            <button 
+              onclick="pingSingleSlot(${slot.id})"
+              class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-cyan-900/40 hover:text-cyan-300 text-slate-300 text-xs font-mono border border-slate-700 flex items-center gap-1 transition active:scale-95">
+              <svg class="w-3 h-3 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+              </svg>
+              Ping
+            </button>
+          </div>
+        `;
+
+        container.appendChild(card);
+      });
+
+      attachInputListeners();
+    }
+
+    function attachInputListeners() {
+      document.querySelectorAll('.slot-name-input').forEach(input => {
+        input.addEventListener('change', (e) => {
+          const id = parseInt(e.target.getAttribute('data-id'), 10);
+          const slot = slotsData.find(s => s.id === id);
+          if (slot) {
+            slot.name = e.target.value.trim();
+            saveSlotsToStorage();
+          }
+        });
+      });
+
+      document.querySelectorAll('.slot-host-input').forEach(input => {
+        input.addEventListener('change', (e) => {
+          const id = parseInt(e.target.getAttribute('data-id'), 10);
+          const slot = slotsData.find(s => s.id === id);
+          if (slot) {
+            slot.host = e.target.value.trim();
+            slot.status = 'idle';
+            slot.latency = null;
+            updateSlotUI(slot);
+            saveSlotsToStorage();
+          }
+        });
+      });
+    }
+
+    function clearSlot(id) {
+      const slot = slotsData.find(s => s.id === id);
+      if (slot) {
+        slot.name = '';
+        slot.host = '';
+        slot.status = 'idle';
+        slot.latency = null;
+        slot.history = [];
+        saveSlotsToStorage();
+        renderGrid();
+      }
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function formatTargetUrl(raw) {
+      if (!raw || !raw.trim()) return null;
+      let target = raw.trim();
+      if (!/^https?:\/\//i.test(target)) {
+        target = 'https://' + target;
+      }
+      return target;
+    }
+
+    async function probeHost(targetUrl) {
+      const startTime = performance.now();
+      const separator = targetUrl.includes('?') ? '&' : '?';
+      const probeUrl = `${targetUrl}${separator}__pulse=${Date.now()}_${Math.random().toString(36).substring(7)}`;
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), PROBE_TIMEOUT_MS);
+
+      try {
+        await fetch(probeUrl, {
+          method: 'GET',
+          mode: 'no-cors',
+          cache: 'no-store',
+          credentials: 'omit',
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        const duration = Math.round(performance.now() - startTime);
+        return { ok: true, latency: duration };
+      } catch (error) {
+        clearTimeout(timeoutId);
+        return { ok: false, latency: null, error: error.name === 'AbortError' ? 'Timeout' : 'Network Error' };
+      }
+    }
+
+    async function pingSingleSlot(id) {
+      const slot = slotsData.find(s => s.id === id);
+      if (!slot || !slot.host || !slot.host.trim()) {
+        if (slot) {
+          slot.status = 'idle';
+          updateSlotUI(slot);
+        }
+        return;
+      }
+
+      slot.status = 'checking';
+      updateSlotUI(slot);
+
+      const target = formatTargetUrl(slot.host);
+      const result = await probeHost(target);
+
+      slot.status = result.ok ? 'online' : 'offline';
+      slot.latency = result.latency;
+      slot.lastChecked = new Date();
+
+      if (!slot.history) slot.history = [];
+      slot.history.push({
+        ok: result.ok,
+        latency: result.latency,
+        time: new Date()
+      });
+
+      if (slot.history.length > 15) {
+        slot.history.shift();
+      }
+
+      updateSlotUI(slot);
+      saveSlotsToStorage();
+    }
+
+    function updateSlotUI(slot) {
+      const badge = document.getElementById(`badge-${slot.id}`);
+      const latencyEl = document.getElementById(`latency-${slot.id}`);
+      const lastCheckEl = document.getElementById(`lastcheck-${slot.id}`);
+      const historyContainer = document.getElementById(`history-${slot.id}`);
+
+      if (!badge) return;
+
+      badge.className = "px-2.5 py-0.5 rounded-full text-[11px] font-medium border flex items-center gap-1.5 transition-all";
+
+      if (slot.status === 'checking') {
+        badge.classList.add("bg-amber-950/70", "text-amber-300", "border-amber-800", "status-pulse-checking");
+        badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping"></span><span>Checando...</span>`;
+      } else if (slot.status === 'online') {
+        badge.classList.add("bg-emerald-950/70", "text-emerald-400", "border-emerald-800", "status-pulse-online");
+        badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span><span>Online</span>`;
+      } else if (slot.status === 'offline') {
+        badge.classList.add("bg-rose-950/70", "text-rose-400", "border-rose-800", "status-pulse-offline");
+        badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span><span>Offline</span>`;
+      } else {
+        badge.classList.add("bg-slate-800", "text-slate-400", "border-slate-700");
+        badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-slate-500"></span><span>Inativo</span>`;
+      }
+
+      if (latencyEl) {
+        if (slot.status === 'checking') {
+          latencyEl.innerHTML = `<span class="text-amber-400 font-mono animate-pulse text-xs">Avaliando...</span>`;
+        } else if (slot.status === 'online' && slot.latency !== null) {
+          latencyEl.innerHTML = `<span class="font-mono text-emerald-400 font-bold">${slot.latency}ms</span>`;
+        } else if (slot.status === 'offline') {
+          latencyEl.innerHTML = `<span class="font-mono text-rose-400 font-semibold">Falha / Timeout</span>`;
+        } else {
+          latencyEl.innerHTML = `<span class="text-slate-500 font-mono">-- ms</span>`;
+        }
+      }
+
+      if (lastCheckEl) {
+        lastCheckEl.textContent = slot.lastChecked ? new Date(slot.lastChecked).toLocaleTimeString() : 'Nunca';
+      }
+
+      if (historyContainer) {
+        if (slot.history && slot.history.length > 0) {
+          historyContainer.innerHTML = slot.history.slice(-8).map(res => {
+            const colorClass = res.ok ? 'bg-emerald-500 shadow-sm shadow-emerald-500/50' : 'bg-rose-500 shadow-sm shadow-rose-500/50';
+            const title = `${res.ok ? 'OK' : 'Falha'} (${res.latency !== null ? res.latency + 'ms' : 'Timeout'}) em ${new Date(res.time).toLocaleTimeString()}`;
+            return `<span class="history-dot ${colorClass}" title="${title}"></span>`;
+          }).join('');
+        } else {
+          historyContainer.innerHTML = '<span class="text-[10px] text-slate-600 font-mono">Sem histórico</span>';
+        }
+      }
+    }
+
+    async function pingAllSlots() {
+      const activeSlots = slotsData.filter(s => s.host && s.host.trim().length > 0);
+      if (activeSlots.length === 0) return;
+      await Promise.allSettled(activeSlots.map(slot => pingSingleSlot(slot.id)));
+    }
+
+    function restartMonitorLoop() {
+      if (monitorTimer) {
+        clearInterval(monitorTimer);
+        monitorTimer = null;
+      }
+
+      if (!isMonitoring) return;
+
+      const intervalSeconds = parseInt(document.getElementById('intervalSelect').value, 10) || 10;
+      monitorTimer = setInterval(() => {
+        if (isMonitoring) {
+          pingAllSlots();
+        }
+      }, intervalSeconds * 1000);
+    }
+
+    function toggleMonitoring() {
+      isMonitoring = !isMonitoring;
+      const btnLoopText = document.getElementById('btnLoopText');
+      const loopStatusDot = document.getElementById('loopStatusDot');
+      const btn = document.getElementById('btnToggleLoop');
+
+      if (isMonitoring) {
+        btnLoopText.textContent = "Monitorando";
+        loopStatusDot.className = "w-2 h-2 rounded-full bg-white animate-ping";
+        btn.className = "px-3.5 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold flex items-center gap-1.5 shadow-lg shadow-cyan-600/20 transition active:scale-95";
+        restartMonitorLoop();
+        pingAllSlots();
+      } else {
+        btnLoopText.textContent = "Pausado";
+        loopStatusDot.className = "w-2 h-2 rounded-full bg-amber-400";
+        btn.className = "px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold flex items-center gap-1.5 border border-slate-700 transition active:scale-95";
+        if (monitorTimer) {
+          clearInterval(monitorTimer);
+          monitorTimer = null;
+        }
+      }
+    }
+
+    document.getElementById('btnPingAll').addEventListener('click', () => {
+      pingAllSlots();
+    });
+
+    document.getElementById('btnToggleLoop').addEventListener('click', () => {
+      toggleMonitoring();
+    });
+
+    document.getElementById('intervalSelect').addEventListener('change', () => {
+      restartMonitorLoop();
+    });
+
+    document.getElementById('btnPresetDefaults').addEventListener('click', () => {
+      slotsData = [
+        { id: 1, name: "Google DNS", host: "https://8.8.8.8" },
+        { id: 2, name: "Cloudflare 1.1.1.1", host: "https://one.one.one.one" },
+        { id: 3, name: "Portal Google", host: "https://www.google.com" },
+        { id: 4, name: "GitHub", host: "https://github.com" },
+        { id: 5, name: "Wikipedia Org", host: "https://www.wikipedia.org" },
+        { id: 6, name: "Microsoft", host: "https://www.microsoft.com" },
+        { id: 7, name: "Roteador Local (Ex)", host: "http://192.168.1.1" },
+        { id: 8, name: "Gateway Local (Ex)", host: "http://192.168.0.1" },
+        { id: 9, name: "Servidor Teste", host: "https://httpbin.org/status/200" }
+      ].map(p => ({
+        ...p,
+        status: 'idle',
+        latency: null,
+        lastChecked: null,
+        history: []
+      }));
+      saveSlotsToStorage();
+      renderGrid();
+      pingAllSlots();
+    });
+
+    window.addEventListener('DOMContentLoaded', () => {
+      loadSlotsData();
+      renderGrid();
+      pingAllSlots();
+      restartMonitorLoop();
+    });
+  </script>
+</body>
+</html>
