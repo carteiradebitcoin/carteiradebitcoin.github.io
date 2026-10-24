@@ -1,39 +1,283 @@
 <!DOCTYPE html>
-<html lang="pt-br" class="dark">
+<html lang="pt-br">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Comparador de Textos Offline - Diff Terminal</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Inter', 'sans-serif'],
-            mono: ['JetBrains Mono', 'monospace'],
-          },
-          colors: {
-            darkbg: '#07090e',
-            darkcard: '#111726',
-            darkborder: '#1e293b',
-          }
-        }
-      }
-    }
-  </script>
 
   <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
     body {
       background-color: #07090e;
       color: #e2e8f0;
-      font-family: 'Inter', sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 14px;
     }
+
+    .container {
+      width: 100%;
+      max-width: 896px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      flex-grow: 1;
+    }
+
+    /* Top Bar: Header & Status */
+    .header-card {
+      background-color: #111726;
+      border: 1px solid #1e293b;
+      border-radius: 12px;
+      padding: 12px 16px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #06b6d4, #2563eb);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(6, 182, 212, 0.3);
+      flex-shrink: 0;
+    }
+
+    .brand-icon svg {
+      width: 16px;
+      height: 16px;
+      stroke: #ffffff;
+      fill: none;
+    }
+
+    .brand-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .badge-tag {
+      font-family: Consolas, "JetBrains Mono", "Courier New", monospace;
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background-color: rgba(6, 182, 212, 0.15);
+      border: 1px solid rgba(6, 182, 212, 0.35);
+      color: #38bdf8;
+      text-transform: uppercase;
+    }
+
+    .brand-subtitle {
+      font-size: 11px;
+      color: #94a3b8;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .status-badge {
+      font-family: Consolas, "JetBrains Mono", "Courier New", monospace;
+      font-size: 12px;
+      font-weight: 500;
+      padding: 4px 12px;
+      border-radius: 8px;
+      border: 1px solid #065f46;
+      background-color: rgba(6, 78, 59, 0.7);
+      color: #34d399;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+
+    .status-badge.divergent {
+      background-color: rgba(76, 5, 25, 0.7);
+      color: #fb7185;
+      border-color: #9f1239;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: #34d399;
+    }
+
+    .status-dot.pulse {
+      background-color: #fb7185;
+    }
+
+    .btn-clear {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      border-radius: 8px;
+      padding: 5px 10px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background-color: #1e293b;
+      border: 1px solid #334155;
+      color: #cbd5e1;
+      transition: background-color 0.2s, color 0.2s;
+    }
+
+    .btn-clear:hover {
+      background-color: #334155;
+      color: #ffffff;
+    }
+
+    /* Main Workspace */
+    .main-workspace {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .input-card {
+      background-color: #111726;
+      border: 1px solid #1e293b;
+      border-radius: 12px;
+      padding: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+      transition: border-color 0.2s;
+    }
+
+    .input-card:focus-within {
+      border-color: rgba(6, 182, 212, 0.8);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+
+    .card-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .num-badge {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      background-color: #1e293b;
+      border: 1px solid #334155;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-family: Consolas, "JetBrains Mono", "Courier New", monospace;
+      font-weight: 700;
+      color: #22d3ee;
+    }
+
+    .card-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: #e2e8f0;
+    }
+
+    .badge-aux {
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-family: Consolas, "JetBrains Mono", "Courier New", monospace;
+      background-color: #1e293b;
+      color: #94a3b8;
+      border: 1px solid #334155;
+    }
+
+    .char-count {
+      font-size: 11px;
+      font-family: Consolas, "JetBrains Mono", "Courier New", monospace;
+      color: #64748b;
+    }
+
+    textarea {
+      width: 100%;
+      background-color: rgba(15, 23, 42, 0.9);
+      border: 1px solid #1e293b;
+      color: #f1f5f9;
+      font-family: Consolas, "JetBrains Mono", "Courier New", monospace;
+      font-size: 12px;
+      border-radius: 8px;
+      padding: 10px;
+      outline: none;
+      transition: border-color 0.2s;
+      resize: vertical;
+      line-height: 1.5;
+    }
+
+    textarea:focus {
+      border-color: #06b6d4;
+    }
+
+    textarea::placeholder {
+      color: #475569;
+    }
+
+    /* Output Comparação */
+    .comparison-display {
+      width: 100%;
+      min-height: 75px;
+      max-height: 220px;
+      overflow-y: auto;
+      background-color: rgba(2, 6, 23, 0.8);
+      border: 1px solid #1e293b;
+      color: #e2e8f0;
+      font-family: Consolas, "JetBrains Mono", "Courier New", monospace;
+      font-size: 12px;
+      border-radius: 8px;
+      padding: 10px;
+      white-space: pre-wrap;
+      word-break: break-all;
+      letter-spacing: -0.01em;
+      line-height: 1.5;
+    }
+
+    .diff {
+      color: #fecdd3;
+      background-color: rgba(225, 29, 72, 0.45);
+      border-bottom: 2px solid #f43f5e;
+      font-weight: 700;
+      border-radius: 2px;
+      padding: 0 1px;
+    }
+
+    /* Scrollbars */
     ::-webkit-scrollbar {
       width: 5px;
       height: 5px;
@@ -48,70 +292,92 @@
     ::-webkit-scrollbar-thumb:hover {
       background: #334155;
     }
-    /* Estilo de realce de caractere divergente no tema dark */
-    .diff {
-      color: #fecdd3;
-      background-color: rgba(225, 29, 72, 0.45);
-      border-bottom: 2px solid #f43f5e;
-      font-weight: 700;
-      border-radius: 2px;
-      padding: 0 1px;
+
+    /* Rodapé */
+    .footer {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid #0f172a;
+      padding-top: 8px;
+      font-size: 11px;
+      color: #64748b;
+      margin-top: 4px;
+      gap: 6px;
+    }
+
+    .footer-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .footer-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background-color: #06b6d4;
+    }
+
+    .footer kbd {
+      padding: 1px 4px;
+      background-color: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 4px;
+      color: #22d3ee;
+      font-family: Consolas, "JetBrains Mono", "Courier New", monospace;
+      font-size: 9px;
     }
   </style>
 </head>
-<body onload="initApp()" class="min-h-screen flex flex-col p-3 md:p-5 antialiased selection:bg-cyan-500 selection:text-white">
+<body onload="initApp()">
 
-  <div class="max-w-4xl mx-auto w-full flex-grow flex flex-col gap-3">
+  <div class="container">
     
     <!-- Top Bar: Header & Status -->
-    <header class="bg-darkcard border border-darkborder rounded-xl p-3 md:p-4 shadow-lg relative overflow-hidden backdrop-blur-md">
-      <div class="absolute -right-16 -top-16 w-52 h-52 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
+    <header class="header-card">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+          </svg>
+        </div>
+        <div>
+          <h1 class="brand-title">
+            DiffCheck <span class="badge-tag">Offline</span>
+          </h1>
+          <p class="brand-subtitle">Comparação caractere a caractere em tempo real</p>
+        </div>
+      </div>
 
-      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <!-- Título -->
-        <div class="flex items-center gap-3">
-          <div class="h-8 w-8 rounded-lg bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-md shadow-cyan-500/20">
-            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-            </svg>
-          </div>
-          <div>
-            <h1 class="text-base md:text-lg font-bold tracking-tight text-white flex items-center gap-2">
-              DiffCheck <span class="text-cyan-400 font-mono text-[10px] px-1.5 py-0.5 rounded bg-cyan-950/70 border border-cyan-800/50 uppercase">Offline</span>
-            </h1>
-            <p class="text-[11px] text-slate-400">Comparação caractere a caractere em tempo real</p>
-          </div>
+      <!-- Status & Ações -->
+      <div class="header-actions">
+        <div id="statusBadge" class="status-badge">
+          <span id="statusDot" class="status-dot"></span>
+          <span id="statusText">Textos Idênticos</span>
         </div>
 
-        <!-- Status & Ações -->
-        <div class="flex items-center gap-2">
-          <!-- Badge de Status Dinâmico -->
-          <div id="statusBadge" class="px-3 py-1 rounded-lg text-xs font-mono font-medium border flex items-center gap-2 transition-all bg-emerald-950/70 text-emerald-400 border-emerald-800">
-            <span id="statusDot" class="w-2 h-2 rounded-full bg-emerald-400"></span>
-            <span id="statusText">Textos Idênticos</span>
-          </div>
-
-          <button onclick="clearAll()" title="Limpar ambos os textos" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium border border-slate-700 transition active:scale-95 flex items-center gap-1">
-            <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-            </svg>
-            Limpar
-          </button>
-        </div>
+        <button onclick="clearAll()" title="Limpar ambos os textos" class="btn-clear">
+          <svg style="width: 14px; height: 14px; stroke: #94a3b8; fill: none;" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+          </svg>
+          Limpar
+        </button>
       </div>
     </header>
 
     <!-- Main Workspace -->
-    <main class="flex flex-col gap-2.5">
+    <main class="main-workspace">
 
       <!-- Campo 1: Texto Original -->
-      <div class="bg-darkcard border border-darkborder focus-within:border-cyan-500/80 rounded-xl p-3 shadow-md transition">
-        <div class="flex items-center justify-between mb-1.5">
-          <div class="flex items-center gap-2">
-            <span class="w-5 h-5 rounded bg-slate-800 border border-slate-700 flex items-center justify-center text-[10px] font-mono font-bold text-cyan-400">01</span>
-            <label for="text1" class="text-xs font-semibold text-slate-200">Texto Original</label>
+      <div class="input-card">
+        <div class="card-header">
+          <div class="card-meta">
+            <span class="num-badge">01</span>
+            <label for="text1" class="card-title">Texto Original</label>
           </div>
-          <span id="count1" class="text-[11px] font-mono text-slate-500">0 caracteres</span>
+          <span id="count1" class="char-count">0 caracteres</span>
         </div>
         <textarea 
           id="text1" 
@@ -119,18 +385,17 @@
           placeholder="Cole ou digite o texto original..."
           onkeydown="handleTab(event, 'text2')"
           oninput="compareTexts()" 
-          class="w-full bg-slate-900/90 border border-darkborder focus:border-cyan-500 text-slate-100 font-mono text-xs rounded-lg p-2.5 focus:outline-none transition shadow-inner placeholder:text-slate-600 resize-y"
         ></textarea>
       </div>
 
       <!-- Campo 2: Texto para Comparar -->
-      <div class="bg-darkcard border border-darkborder focus-within:border-cyan-500/80 rounded-xl p-3 shadow-md transition">
-        <div class="flex items-center justify-between mb-1.5">
-          <div class="flex items-center gap-2">
-            <span class="w-5 h-5 rounded bg-slate-800 border border-slate-700 flex items-center justify-center text-[10px] font-mono font-bold text-cyan-400">02</span>
-            <label for="text2" class="text-xs font-semibold text-slate-200">Texto para Comparar</label>
+      <div class="input-card">
+        <div class="card-header">
+          <div class="card-meta">
+            <span class="num-badge">02</span>
+            <label for="text2" class="card-title">Texto para Comparar</label>
           </div>
-          <span id="count2" class="text-[11px] font-mono text-slate-500">0 caracteres</span>
+          <span id="count2" class="char-count">0 caracteres</span>
         </div>
         <textarea 
           id="text2" 
@@ -138,36 +403,35 @@
           placeholder="Cole ou digite o texto que deseja verificar..."
           onkeydown="handleTab(event, 'text1')"
           oninput="compareTexts()" 
-          class="w-full bg-slate-900/90 border border-darkborder focus:border-cyan-500 text-slate-100 font-mono text-xs rounded-lg p-2.5 focus:outline-none transition shadow-inner placeholder:text-slate-600 resize-y"
         ></textarea>
       </div>
 
-      <!-- Campo 3: Resultado da Comparação com Highlights -->
-      <div class="bg-darkcard border border-darkborder rounded-xl p-3 shadow-md transition">
-        <div class="flex items-center justify-between mb-1.5">
-          <div class="flex items-center gap-2">
-            <span class="w-5 h-5 rounded bg-slate-800 border border-slate-700 flex items-center justify-center text-[10px] font-mono font-bold text-amber-400">03</span>
-            <span class="text-xs font-semibold text-slate-200">Resultado da Comparação</span>
-            <span class="px-1.5 py-0.2 rounded text-[10px] font-mono bg-slate-800 text-slate-400 border border-slate-700">Destaques no Texto 2</span>
+      <!-- Campo 3: Resultado da Comparação -->
+      <div class="input-card">
+        <div class="card-header">
+          <div class="card-meta">
+            <span class="num-badge" style="color: #fbbf24;">03</span>
+            <span class="card-title">Resultado da Comparação</span>
+            <span class="badge-aux">Destaques no Texto 2</span>
           </div>
-          <span id="diffStats" class="text-[11px] font-mono text-slate-500">0 divergências</span>
+          <span id="diffStats" class="char-count">0 divergências</span>
         </div>
         <div 
           id="comparisonDisplay" 
-          class="w-full min-h-[75px] max-h-[220px] overflow-y-auto bg-slate-950/80 border border-slate-800 text-slate-200 font-mono text-xs rounded-lg p-2.5 whitespace-pre-wrap break-all tracking-tight"
+          class="comparison-display"
         ></div>
       </div>
 
     </main>
 
     <!-- Rodapé -->
-    <footer class="text-center text-[11px] text-slate-500 py-2 flex flex-col sm:flex-row items-center justify-between gap-1 border-t border-slate-900 mt-1">
-      <div class="flex items-center gap-2">
-        <span class="inline-block w-1.5 h-1.5 rounded-full bg-cyan-500"></span>
+    <footer class="footer">
+      <div class="footer-left">
+        <span class="footer-dot"></span>
         <span>Comparador Local Client-Side</span>
       </div>
       <div>
-        Alterne entre as caixas usando <kbd class="px-1 py-0.2 bg-slate-800 border border-slate-700 rounded text-cyan-400 font-mono text-[9px]">Tab</kbd>
+        Alterne entre as caixas usando <kbd>Tab</kbd>
       </div>
     </footer>
   </div>
@@ -216,17 +480,17 @@
         diffCount += (text1.length - text2.length);
       }
 
-      display.innerHTML = highlightedHtml || '<span class="text-slate-600">Aguardando inserção de dados...</span>';
+      display.innerHTML = highlightedHtml || '<span style="color: #475569;">Aguardando inserção de dados...</span>';
       diffStats.textContent = `${diffCount} divergência${diffCount === 1 ? '' : 's'}`;
 
       // Atualização do Status Badge
       if (text1 === text2) {
-        statusBadge.className = 'px-3 py-1 rounded-lg text-xs font-mono font-medium border flex items-center gap-2 transition-all bg-emerald-950/70 text-emerald-400 border-emerald-800';
-        statusDot.className = 'w-2 h-2 rounded-full bg-emerald-400';
+        statusBadge.className = 'status-badge';
+        statusDot.className = 'status-dot';
         statusText.textContent = 'Textos Idênticos';
       } else {
-        statusBadge.className = 'px-3 py-1 rounded-lg text-xs font-mono font-medium border flex items-center gap-2 transition-all bg-rose-950/70 text-rose-400 border-rose-800';
-        statusDot.className = 'w-2 h-2 rounded-full bg-rose-400 animate-pulse';
+        statusBadge.className = 'status-badge divergent';
+        statusDot.className = 'status-dot pulse';
         statusText.textContent = 'Textos com Divergência';
       }
     }

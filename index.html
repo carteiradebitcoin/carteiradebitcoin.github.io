@@ -1,208 +1,391 @@
 <!DOCTYPE html>
-<html lang="pt-BR" class="dark">
+<html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CyberSuite - Painel de Utilitários</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Inter', 'sans-serif'],
-            mono: ['JetBrains Mono', 'monospace'],
-          },
-          colors: {
-            darkbg: '#07090e',
-            darkcard: '#111726',
-            darkborder: '#1e293b',
-          }
-        }
-      }
-    }
-  </script>
 
   <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
     body {
       background-color: #07090e;
       color: #e2e8f0;
-      font-family: 'Inter', sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 16px;
     }
-    ::-webkit-scrollbar {
-      width: 5px;
-      height: 5px;
+
+    .container {
+      width: 100%;
+      max-width: 1024px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
     }
-    ::-webkit-scrollbar-track {
-      background: #0d121f;
+
+    /* Header Compacto */
+    .header-card {
+      background-color: #111726;
+      border: 1px solid #1e293b;
+      border-radius: 12px;
+      padding: 14px 18px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
     }
-    ::-webkit-scrollbar-thumb {
-      background: #1e293b;
-      border-radius: 3px;
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
     }
-    ::-webkit-scrollbar-thumb:hover {
-      background: #334155;
+
+    .brand-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #06b6d4, #2563eb);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(6, 182, 212, 0.3);
+      flex-shrink: 0;
+    }
+
+    .brand-icon svg {
+      width: 18px;
+      height: 18px;
+      stroke: #ffffff;
+      fill: none;
+    }
+
+    .brand-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .badge-tag {
+      font-family: Consolas, "JetBrains Mono", "Courier New", monospace;
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background-color: rgba(6, 182, 212, 0.15);
+      border: 1px solid rgba(6, 182, 212, 0.35);
+      color: #38bdf8;
+      text-transform: uppercase;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn-download {
+      font-family: Consolas, "JetBrains Mono", "Courier New", monospace;
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: 8px;
+      padding: 6px 12px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background-color: rgba(6, 182, 212, 0.15);
+      border: 1px solid rgba(6, 182, 212, 0.4);
+      color: #38bdf8;
+      text-decoration: none;
+      transition: background-color 0.2s, color 0.2s;
+    }
+
+    .btn-download:hover {
+      background-color: #06b6d4;
+      color: #07090e;
+    }
+
+    .badge-counter {
+      font-family: Consolas, "JetBrains Mono", "Courier New", monospace;
+      font-size: 11px;
+      padding: 6px 10px;
+      border-radius: 8px;
+      background-color: #0b0f19;
+      border: 1px solid #1e293b;
+      color: #34d399;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .dot-pulse {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background-color: #10b981;
+    }
+
+    /* Grid de Utilitários */
+    .tools-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+      gap: 10px;
+    }
+
+    .tool-link {
+      background-color: #111726;
+      border: 1px solid #1e293b;
+      border-radius: 10px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      text-decoration: none;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+
+    .tool-link:hover {
+      border-color: #38bdf8;
+      transform: translateY(-1px);
+    }
+
+    .tool-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: #e2e8f0;
+      transition: color 0.2s;
+    }
+
+    .tool-link:hover .tool-name {
+      color: #38bdf8;
+    }
+
+    .tool-arrow {
+      font-family: Consolas, "JetBrains Mono", "Courier New", monospace;
+      font-size: 13px;
+      color: #38bdf8;
+      transition: transform 0.2s;
+    }
+
+    .tool-link:hover .tool-arrow {
+      transform: translateX(3px);
+    }
+
+    /* Cores de borda/destaque para categorias */
+    .tool-link.accent-amber:hover {
+      border-color: #f59e0b;
+    }
+    .tool-link.accent-amber:hover .tool-name,
+    .tool-link.accent-amber:hover .tool-arrow {
+      color: #fbbf24;
+    }
+
+    .tool-link.accent-emerald:hover {
+      border-color: #10b981;
+    }
+    .tool-link.accent-emerald:hover .tool-name,
+    .tool-link.accent-emerald:hover .tool-arrow {
+      color: #34d399;
+    }
+
+    .tool-link.accent-rose:hover {
+      border-color: #f43f5e;
+    }
+    .tool-link.accent-rose:hover .tool-name,
+    .tool-link.accent-rose:hover .tool-arrow {
+      color: #fb7185;
+    }
+
+    .tool-link.accent-blue:hover {
+      border-color: #3b82f6;
+    }
+    .tool-link.accent-blue:hover .tool-name,
+    .tool-link.accent-blue:hover .tool-arrow {
+      color: #60a5fa;
+    }
+
+    /* Footer */
+    .footer {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid #1e293b;
+      padding-top: 10px;
+      font-size: 11px;
+      color: #64748b;
+      margin-top: 12px;
+      gap: 6px;
+    }
+
+    .footer code {
+      font-family: Consolas, "JetBrains Mono", "Courier New", monospace;
+      color: #38bdf8;
     }
   </style>
 </head>
-<body class="min-h-screen flex flex-col p-3 md:p-5 antialiased selection:bg-cyan-500 selection:text-white justify-between">
+<body>
 
-  <div class="max-w-5xl mx-auto w-full flex flex-col gap-3">
+  <div class="container">
     
     <!-- Header Compacto -->
-    <header class="bg-darkcard border border-darkborder rounded-xl p-3 md:p-4 shadow-lg relative overflow-hidden backdrop-blur-md">
-      <div class="absolute -right-16 -top-16 w-52 h-52 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
-
-      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div class="flex items-center gap-3">
-          <div class="h-8 w-8 rounded-lg bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-md shadow-cyan-500/20">
-            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-            </svg>
-          </div>
-          <div>
-            <h1 class="text-base md:text-lg font-bold tracking-tight text-white flex items-center gap-2">
-              CyberSuite <span class="text-cyan-400 font-mono text-[10px] px-1.5 py-0.5 rounded bg-cyan-950/70 border border-cyan-800/50 uppercase">Local Hub</span>
-            </h1>
-          </div>
+    <header class="header-card">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+          </svg>
         </div>
+        <div>
+          <h1 class="brand-title">
+            CyberSuite <span class="badge-tag">Local Hub</span>
+          </h1>
+        </div>
+      </div>
 
-        <div class="flex flex-wrap items-center gap-2">
-          <!-- Botão de Download do Pacote Offline -->
-          <a href="https://github.com/carteiradebitcoin/carteiradebitcoin/raw/refs/heads/main/Carteira%20de%20Bitcoin.rar" 
-             download 
-             title="Baixar pacote completo compactado para uso 100% offline"
-             class="px-3 py-1.5 rounded-lg bg-cyan-950/60 hover:bg-cyan-600 text-cyan-300 hover:text-white border border-cyan-800/60 text-xs font-mono font-medium flex items-center gap-1.5 transition active:scale-95 shadow-sm">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-            </svg>
-            <span>Baixar Offline (.rar)</span>
-          </a>
+      <div class="header-actions">
+        <!-- Download Offline -->
+        <a href="https://github.com/carteiradebitcoin/carteiradebitcoin/raw/refs/heads/main/Carteira%20de%20Bitcoin.rar" 
+           download 
+           title="Baixar pacote completo compactado para uso 100% offline"
+           class="btn-download">
+          <svg style="width: 14px; height: 14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+          </svg>
+          <span>Baixar Offline (.rar)</span>
+        </a>
 
-          <!-- Indicador de Contagem -->
-          <span class="px-2.5 py-1.5 rounded-lg bg-slate-900 border border-darkborder text-[11px] font-mono text-emerald-400 flex items-center gap-1.5">
-            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> 16 Utilitários
-          </span>
+        <!-- Contador -->
+        <div class="badge-counter">
+          <span class="dot-pulse"></span>
+          <span>16 Utilitários</span>
         </div>
       </div>
     </header>
 
-    <!-- Grid de Links (Abertura Direta em Nova Guia) -->
-    <main class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
+    <!-- Grid de Links -->
+    <main class="tools-grid">
 
       <!-- 01 -->
-      <a href="01) Gerador de Entropia.html" target="_blank" rel="noopener noreferrer" class="bg-darkcard border border-darkborder hover:border-cyan-500/80 rounded-xl p-3 shadow transition flex items-center justify-between group">
-        <span class="text-xs font-semibold text-slate-200 group-hover:text-cyan-300 transition">Gerador de Entropia</span>
-        <span class="text-xs font-mono text-cyan-400 group-hover:translate-x-1 transition-transform">↗</span>
+      <a href="01) Gerador de Entropia.html" target="_blank" rel="noopener noreferrer" class="tool-link">
+        <span class="tool-name">Gerador de Entropia</span>
+        <span class="tool-arrow">↗</span>
       </a>
 
       <!-- 02 -->
-      <a href="02) Gerador de Seeds (Seed Tools).html" target="_blank" rel="noopener noreferrer" class="bg-darkcard border border-darkborder hover:border-amber-500/80 rounded-xl p-3 shadow transition flex items-center justify-between group">
-        <span class="text-xs font-semibold text-slate-200 group-hover:text-amber-300 transition">Gerador de Seeds (Seed Tools)</span>
-        <span class="text-xs font-mono text-amber-400 group-hover:translate-x-1 transition-transform">↗</span>
+      <a href="02) Gerador de Seeds (Seed Tools).html" target="_blank" rel="noopener noreferrer" class="tool-link accent-amber">
+        <span class="tool-name">Gerador de Seeds (Seed Tools)</span>
+        <span class="tool-arrow">↗</span>
       </a>
 
       <!-- 03 -->
-      <a href="03) Gerador de Seeds (Iancoleman).html" target="_blank" rel="noopener noreferrer" class="bg-darkcard border border-darkborder hover:border-amber-500/80 rounded-xl p-3 shadow transition flex items-center justify-between group">
-        <span class="text-xs font-semibold text-slate-200 group-hover:text-amber-300 transition">Gerador de Seeds (Iancoleman)</span>
-        <span class="text-xs font-mono text-amber-400 group-hover:translate-x-1 transition-transform">↗</span>
+      <a href="03) Gerador de Seeds (Iancoleman).html" target="_blank" rel="noopener noreferrer" class="tool-link accent-amber">
+        <span class="tool-name">Gerador de Seeds (Iancoleman)</span>
+        <span class="tool-arrow">↗</span>
       </a>
 
       <!-- 04 -->
-      <a href="04) Gerador de QR Code.html" target="_blank" rel="noopener noreferrer" class="bg-darkcard border border-darkborder hover:border-cyan-500/80 rounded-xl p-3 shadow transition flex items-center justify-between group">
-        <span class="text-xs font-semibold text-slate-200 group-hover:text-cyan-300 transition">Gerador de QR Code</span>
-        <span class="text-xs font-mono text-cyan-400 group-hover:translate-x-1 transition-transform">↗</span>
+      <a href="04) Gerador de QR Code.html" target="_blank" rel="noopener noreferrer" class="tool-link">
+        <span class="tool-name">Gerador de QR Code</span>
+        <span class="tool-arrow">↗</span>
       </a>
 
       <!-- 05 -->
-      <a href="05) Gerador de WIF e Endereço Bitcoin (Antigo).html" target="_blank" rel="noopener noreferrer" class="bg-darkcard border border-darkborder hover:border-amber-500/80 rounded-xl p-3 shadow transition flex items-center justify-between group">
-        <span class="text-xs font-semibold text-slate-200 group-hover:text-amber-300 transition">Gerador de WIF e Endereço Bitcoin (Antigo)</span>
-        <span class="text-xs font-mono text-amber-400 group-hover:translate-x-1 transition-transform">↗</span>
+      <a href="05) Gerador de WIF e Endereço Bitcoin (Antigo).html" target="_blank" rel="noopener noreferrer" class="tool-link accent-amber">
+        <span class="tool-name">Gerador de WIF e Endereço Bitcoin (Antigo)</span>
+        <span class="tool-arrow">↗</span>
       </a>
 
       <!-- 06 -->
-      <a href="06) Gerador de Senhas.html" target="_blank" rel="noopener noreferrer" class="bg-darkcard border border-darkborder hover:border-teal-500/80 rounded-xl p-3 shadow transition flex items-center justify-between group">
-        <span class="text-xs font-semibold text-slate-200 group-hover:text-teal-300 transition">Gerador de Senhas</span>
-        <span class="text-xs font-mono text-teal-400 group-hover:translate-x-1 transition-transform">↗</span>
+      <a href="06) Gerador de Senhas.html" target="_blank" rel="noopener noreferrer" class="tool-link accent-emerald">
+        <span class="tool-name">Gerador de Senhas</span>
+        <span class="tool-arrow">↗</span>
       </a>
 
       <!-- 07 -->
-      <a href="07) Compara Texto.html" target="_blank" rel="noopener noreferrer" class="bg-darkcard border border-darkborder hover:border-rose-500/80 rounded-xl p-3 shadow transition flex items-center justify-between group">
-        <span class="text-xs font-semibold text-slate-200 group-hover:text-rose-300 transition">Compara Texto</span>
-        <span class="text-xs font-mono text-rose-400 group-hover:translate-x-1 transition-transform">↗</span>
+      <a href="07) Compara Texto.html" target="_blank" rel="noopener noreferrer" class="tool-link accent-rose">
+        <span class="tool-name">Compara Texto</span>
+        <span class="tool-arrow">↗</span>
       </a>
 
       <!-- 08 -->
-      <a href="08) Criptografia de Texto.html" target="_blank" rel="noopener noreferrer" class="bg-darkcard border border-darkborder hover:border-emerald-500/80 rounded-xl p-3 shadow transition flex items-center justify-between group">
-        <span class="text-xs font-semibold text-slate-200 group-hover:text-emerald-300 transition">Criptografia de Texto</span>
-        <span class="text-xs font-mono text-emerald-400 group-hover:translate-x-1 transition-transform">↗</span>
+      <a href="08) Criptografia de Texto.html" target="_blank" rel="noopener noreferrer" class="tool-link accent-emerald">
+        <span class="tool-name">Criptografia de Texto</span>
+        <span class="tool-arrow">↗</span>
       </a>
 
       <!-- 09 -->
-      <a href="09) Leet Speak.html" target="_blank" rel="noopener noreferrer" class="bg-darkcard border border-darkborder hover:border-emerald-500/80 rounded-xl p-3 shadow transition flex items-center justify-between group">
-        <span class="text-xs font-semibold text-slate-200 group-hover:text-emerald-300 transition">Leet Speak</span>
-        <span class="text-xs font-mono text-emerald-400 group-hover:translate-x-1 transition-transform">↗</span>
+      <a href="09) Leet Speak.html" target="_blank" rel="noopener noreferrer" class="tool-link accent-emerald">
+        <span class="tool-name">Leet Speak</span>
+        <span class="tool-arrow">↗</span>
       </a>
 
       <!-- 10 -->
-      <a href="10) BTC e Dolar Atual.html" target="_blank" rel="noopener noreferrer" class="bg-darkcard border border-darkborder hover:border-amber-500/80 rounded-xl p-3 shadow transition flex items-center justify-between group">
-        <span class="text-xs font-semibold text-slate-200 group-hover:text-amber-300 transition">BTC e Dólar Atual</span>
-        <span class="text-xs font-mono text-amber-400 group-hover:translate-x-1 transition-transform">↗</span>
+      <a href="10) BTC e Dolar Atual.html" target="_blank" rel="noopener noreferrer" class="tool-link accent-amber">
+        <span class="tool-name">BTC e Dólar Atual</span>
+        <span class="tool-arrow">↗</span>
       </a>
 
       <!-- 11 -->
-      <a href="11) Busca Noticias.html" target="_blank" rel="noopener noreferrer" class="bg-darkcard border border-darkborder hover:border-blue-500/80 rounded-xl p-3 shadow transition flex items-center justify-between group">
-        <span class="text-xs font-semibold text-slate-200 group-hover:text-blue-300 transition">Busca Notícias</span>
-        <span class="text-xs font-mono text-blue-400 group-hover:translate-x-1 transition-transform">↗</span>
+      <a href="11) Busca Noticias.html" target="_blank" rel="noopener noreferrer" class="tool-link accent-blue">
+        <span class="tool-name">Busca Notícias</span>
+        <span class="tool-arrow">↗</span>
       </a>
 
       <!-- 12 -->
-      <a href="12) Monitora Conexão.html" target="_blank" rel="noopener noreferrer" class="bg-darkcard border border-darkborder hover:border-cyan-500/80 rounded-xl p-3 shadow transition flex items-center justify-between group">
-        <span class="text-xs font-semibold text-slate-200 group-hover:text-cyan-300 transition">Monitora Conexão</span>
-        <span class="text-xs font-mono text-cyan-400 group-hover:translate-x-1 transition-transform">↗</span>
+      <a href="12) Monitora Conexão.html" target="_blank" rel="noopener noreferrer" class="tool-link">
+        <span class="tool-name">Monitora Conexão</span>
+        <span class="tool-arrow">↗</span>
       </a>
 
       <!-- 13 -->
-      <a href="13) Monitor de Conectividade 9 slots.html" target="_blank" rel="noopener noreferrer" class="bg-darkcard border border-darkborder hover:border-cyan-500/80 rounded-xl p-3 shadow transition flex items-center justify-between group">
-        <span class="text-xs font-semibold text-slate-200 group-hover:text-cyan-300 transition">Monitor de Conectividade (9 Slots)</span>
-        <span class="text-xs font-mono text-cyan-400 group-hover:translate-x-1 transition-transform">↗</span>
+      <a href="13) Monitor de Conectividade 9 slots.html" target="_blank" rel="noopener noreferrer" class="tool-link">
+        <span class="tool-name">Monitor de Conectividade (9 Slots)</span>
+        <span class="tool-arrow">↗</span>
       </a>
 
       <!-- 14 -->
-      <a href="14) Relógio_Original.html" target="_blank" rel="noopener noreferrer" class="bg-darkcard border border-darkborder hover:border-blue-500/80 rounded-xl p-3 shadow transition flex items-center justify-between group">
-        <span class="text-xs font-semibold text-slate-200 group-hover:text-blue-300 transition">Relógio Original</span>
-        <span class="text-xs font-mono text-blue-400 group-hover:translate-x-1 transition-transform">↗</span>
+      <a href="14) Relógio_Original.html" target="_blank" rel="noopener noreferrer" class="tool-link accent-blue">
+        <span class="tool-name">Relógio Original</span>
+        <span class="tool-arrow">↗</span>
       </a>
 
       <!-- 15 -->
-      <a href="15) Relógio_Original_Antigo.html" target="_blank" rel="noopener noreferrer" class="bg-darkcard border border-darkborder hover:border-blue-500/80 rounded-xl p-3 shadow transition flex items-center justify-between group">
-        <span class="text-xs font-semibold text-slate-200 group-hover:text-blue-300 transition">Relógio Original (Antigo)</span>
-        <span class="text-xs font-mono text-blue-400 group-hover:translate-x-1 transition-transform">↗</span>
+      <a href="15) Relógio_Original_Antigo.html" target="_blank" rel="noopener noreferrer" class="tool-link accent-blue">
+        <span class="tool-name">Relógio Original (Antigo)</span>
+        <span class="tool-arrow">↗</span>
       </a>
 
       <!-- 16 -->
-      <a href="16) Transmissor & Codificador Morse.html" target="_blank" rel="noopener noreferrer" class="bg-darkcard border border-darkborder hover:border-cyan-500/80 rounded-xl p-3 shadow transition flex items-center justify-between group">
-        <span class="text-xs font-semibold text-slate-200 group-hover:text-cyan-300 transition">Transmissor & Codificador Morse</span>
-        <span class="text-xs font-mono text-cyan-400 group-hover:translate-x-1 transition-transform">↗</span>
+      <a href="16) Transmissor & Codificador Morse.html" target="_blank" rel="noopener noreferrer" class="tool-link">
+        <span class="tool-name">Transmissor & Codificador Morse</span>
+        <span class="tool-arrow">↗</span>
       </a>
 
     </main>
 
     <!-- Rodapé -->
-    <footer class="text-center text-[11px] text-slate-500 py-2 flex flex-col sm:flex-row items-center justify-between gap-1 border-t border-slate-900 mt-1">
-      <div class="flex items-center gap-2">
-        <span class="inline-block w-1.5 h-1.5 rounded-full bg-cyan-500"></span>
-        <span>Acesso local offline direto</span>
-      </div>
-      <div>
-        Todos os links abrem em <code class="text-cyan-400 font-mono">nova guia</code> preservando o índice
-      </div>
+    <footer class="footer">
+      <div>Acesso local offline direto</div>
+      <div>Todos os links abrem em <code>nova guia</code></div>
     </footer>
+
   </div>
 
 </body>

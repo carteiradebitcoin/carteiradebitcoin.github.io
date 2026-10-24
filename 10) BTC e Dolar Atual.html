@@ -1,39 +1,317 @@
 <!DOCTYPE html>
-<html lang="pt-BR" class="dark">
+<html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Bitcoin Converter Pro - Terminal</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Inter', 'sans-serif'],
-            mono: ['JetBrains Mono', 'monospace'],
-          },
-          colors: {
-            darkbg: '#07090e',
-            darkcard: '#111726',
-            darkborder: '#1e293b',
-          }
-        }
-      }
-    }
-  </script>
 
   <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
     body {
       background-color: #07090e;
       color: #e2e8f0;
-      font-family: 'Inter', sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 14px;
     }
+
+    .container {
+      width: 100%;
+      max-width: 896px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      flex-grow: 1;
+    }
+
+    /* Header Principal */
+    .header-card {
+      background-color: #111726;
+      border: 1px solid #1e293b;
+      border-radius: 12px;
+      padding: 12px 16px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #f59e0b, #ea580c);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(245, 158, 11, 0.2);
+      flex-shrink: 0;
+    }
+
+    .brand-icon svg {
+      width: 20px;
+      height: 20px;
+      fill: #ffffff;
+    }
+
+    .brand-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .badge-tag {
+      font-family: Consolas, "JetBrains Mono", "Courier New", monospace;
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background-color: rgba(69, 26, 3, 0.7);
+      border: 1px solid rgba(180, 83, 9, 0.5);
+      color: #fbbf24;
+      text-transform: uppercase;
+    }
+
+    .brand-subtitle {
+      font-size: 11px;
+      color: #94a3b8;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-refresh {
+      font-family: Consolas, "JetBrains Mono", "Courier New", monospace;
+      font-size: 12px;
+      border-radius: 8px;
+      padding: 6px 12px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background-color: rgba(245, 158, 11, 0.1);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      color: #fcd34d;
+      transition: background-color 0.2s, color 0.2s;
+    }
+
+    .btn-refresh:hover {
+      background-color: rgba(245, 158, 11, 0.2);
+    }
+
+    .btn-clear {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      border-radius: 8px;
+      padding: 6px 10px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background-color: #1e293b;
+      border: 1px solid #334155;
+      color: #cbd5e1;
+      transition: background-color 0.2s, color 0.2s;
+    }
+
+    .btn-clear:hover {
+      background-color: #334155;
+      color: #ffffff;
+    }
+
+    /* Cards de Cotações */
+    .quotes-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 10px;
+    }
+
+    .quote-card {
+      background-color: #111726;
+      border: 1px solid #1e293b;
+      border-radius: 12px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .quote-label {
+      font-size: 10px;
+      font-family: Consolas, "JetBrains Mono", "Courier New", monospace;
+      text-transform: uppercase;
+      color: #94a3b8;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    .quote-val {
+      font-family: Consolas, "JetBrains Mono", "Courier New", monospace;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .quote-badge {
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-family: Consolas, "JetBrains Mono", "Courier New", monospace;
+      border: 1px solid transparent;
+    }
+
+    /* Lista de Inputs */
+    .inputs-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .input-card {
+      background-color: #111726;
+      border: 1px solid #1e293b;
+      border-radius: 12px;
+      padding: 10px 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+      transition: border-color 0.2s;
+    }
+
+    .input-card:hover {
+      border-color: #334155;
+    }
+
+    .input-card:focus-within {
+      border-color: #06b6d4;
+    }
+
+    .input-card.focus-usd:focus-within {
+      border-color: #10b981;
+    }
+
+    .input-card.focus-brl:focus-within {
+      border-color: #3b82f6;
+    }
+
+    .input-card.focus-btc:focus-within {
+      border-color: #06b6d4;
+    }
+
+    .input-card.focus-sats:focus-within {
+      border-color: #f59e0b;
+    }
+
+    .input-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+
+    .input-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .num-badge {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      background-color: #1e293b;
+      border: 1px solid #334155;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-family: Consolas, "JetBrains Mono", "Courier New", monospace;
+      font-weight: 700;
+    }
+
+    .input-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: #e2e8f0;
+    }
+
+    .badge-aux {
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-family: Consolas, "JetBrains Mono", "Courier New", monospace;
+      border: 1px solid transparent;
+    }
+
+    .btn-copy {
+      padding: 2px 10px;
+      border-radius: 6px;
+      background-color: #1e293b;
+      border: 1px solid #334155;
+      color: #cbd5e1;
+      font-size: 12px;
+      font-family: Consolas, "JetBrains Mono", "Courier New", monospace;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.2s;
+    }
+
+    .btn-copy:hover {
+      background-color: #334155;
+      color: #ffffff;
+    }
+
+    .field-input {
+      width: 100%;
+      background-color: rgba(2, 6, 23, 0.8);
+      border: 1px solid #1e293b;
+      font-family: Consolas, "JetBrains Mono", "Courier New", monospace;
+      font-size: 13px;
+      border-radius: 8px;
+      padding: 8px 10px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      letter-spacing: -0.01em;
+    }
+
+    .field-input:focus {
+      border-color: #06b6d4;
+    }
+
+    /* Animação do ícone de refresh */
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .spin {
+      animation: spin 0.8s linear infinite;
+    }
+
+    /* Scrollbars */
     ::-webkit-scrollbar {
       width: 5px;
       height: 5px;
@@ -48,89 +326,122 @@
     ::-webkit-scrollbar-thumb:hover {
       background: #334155;
     }
+
+    /* Rodapé */
+    .footer {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid #0f172a;
+      padding-top: 8px;
+      font-size: 11px;
+      color: #64748b;
+      margin-top: 4px;
+      gap: 6px;
+    }
+
+    .footer-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .footer-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background-color: #10b981;
+    }
+
+    .footer kbd {
+      padding: 1px 4px;
+      background-color: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 4px;
+      color: #fbbf24;
+      font-family: Consolas, "JetBrains Mono", "Courier New", monospace;
+      font-size: 9px;
+    }
   </style>
 </head>
-<body onload="initApp()" class="min-h-screen flex flex-col p-3 md:p-5 antialiased selection:bg-amber-500 selection:text-black">
+<body onload="initApp()">
 
-  <div class="max-w-4xl mx-auto w-full flex-grow flex flex-col gap-3">
+  <div class="container">
     
     <!-- Header Principal -->
-    <header class="bg-darkcard border border-darkborder rounded-xl p-3 md:p-4 shadow-lg relative overflow-hidden backdrop-blur-md">
-      <div class="absolute -right-16 -top-16 w-52 h-52 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
-
-      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div class="flex items-center gap-3">
-          <div class="h-9 w-9 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-600 flex items-center justify-center shadow-md shadow-amber-500/20">
-            <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 14.59h-1.82v-1.1c-.34.07-.7.1-1.07.1-.47 0-.96-.06-1.46-.18l.31-1.28c.4.1.78.16 1.15.16.59 0 .97-.24.97-.68 0-.39-.24-.61-.95-.91-.98-.42-1.57-.96-1.57-1.85 0-.99.76-1.74 2.1-1.88v-1.1h1.82v1.1c.32-.07.64-.1.97-.1.44 0 .86.05 1.25.14l-.3 1.26c-.35-.09-.7-.14-1.05-.14-.54 0-.89.22-.89.62 0 .37.26.57 1.03.88 1.05.42 1.62.99 1.62 1.93 0 1.03-.78 1.77-2.16 1.93v1.11z"/>
-            </svg>
-          </div>
-          <div>
-            <h1 class="text-base md:text-lg font-bold tracking-tight text-white flex items-center gap-2">
-              BTC Converter <span class="text-amber-400 font-mono text-[10px] px-1.5 py-0.5 rounded bg-amber-950/70 border border-amber-800/50 uppercase">CoinGecko API</span>
-            </h1>
-            <p class="text-[11px] text-slate-400">Conversor bidirecional em tempo real (USD, BRL, BTC e Sats)</p>
-          </div>
+    <header class="header-card">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 14.59h-1.82v-1.1c-.34.07-.7.1-1.07.1-.47 0-.96-.06-1.46-.18l.31-1.28c.4.1.78.16 1.15.16.59 0 .97-.24.97-.68 0-.39-.24-.61-.95-.91-.98-.42-1.57-.96-1.57-1.85 0-.99.76-1.74 2.1-1.88v-1.1h1.82v1.1c.32-.07.64-.1.97-.1.44 0 .86.05 1.25.14l-.3 1.26c-.35-.09-.7-.14-1.05-.14-.54 0-.89.22-.89.62 0 .37.26.57 1.03.88 1.05.42 1.62.99 1.62 1.93 0 1.03-.78 1.77-2.16 1.93v1.11z"/>
+          </svg>
         </div>
-
-        <!-- Botões de Ação -->
-        <div class="flex items-center gap-2">
-          <button id="btnRefresh" onclick="updatePrices()" class="px-3 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 text-xs font-mono border border-amber-500/30 transition active:scale-95 flex items-center gap-1.5">
-            <svg id="refreshIcon" class="w-3.5 h-3.5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-            <span>Atualizar</span>
-          </button>
-          
-          <button onclick="clearFields()" title="Limpar todos os campos" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium border border-slate-700 transition active:scale-95 flex items-center gap-1">
-            <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-            </svg>
-            <span>Limpar</span>
-          </button>
+        <div>
+          <h1 class="brand-title">
+            BTC Converter <span class="badge-tag">CoinGecko API</span>
+          </h1>
+          <p class="brand-subtitle">Conversor bidirecional em tempo real (USD, BRL, BTC e Sats)</p>
         </div>
+      </div>
+
+      <!-- Botões de Ação -->
+      <div class="header-actions">
+        <button id="btnRefresh" onclick="updatePrices()" class="btn-refresh">
+          <svg id="refreshIcon" style="width: 14px; height: 14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          <span>Atualizar</span>
+        </button>
+        
+        <button onclick="clearFields()" title="Limpar todos os campos" class="btn-clear">
+          <svg style="width: 14px; height: 14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+          </svg>
+          <span>Limpar</span>
+        </button>
       </div>
     </header>
 
     <!-- Cards de Cotações de Topo -->
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-      <div class="bg-darkcard border border-darkborder rounded-xl p-2.5 flex items-center justify-between shadow-sm">
+    <div class="quotes-grid">
+      <div class="quote-card">
         <div>
-          <span class="text-[10px] font-mono uppercase text-slate-400 block">1 BTC (USD)</span>
-          <span id="oneBtcInUsd" class="font-mono text-xs md:text-sm font-semibold text-emerald-400">---</span>
+          <span class="quote-label">1 BTC (USD)</span>
+          <span id="oneBtcInUsd" class="quote-val" style="color: #34d399;">---</span>
         </div>
-        <span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-emerald-950/70 border border-emerald-800/50 text-emerald-300">USD</span>
+        <span class="quote-badge" style="background-color: rgba(6, 78, 59, 0.7); border-color: rgba(16, 185, 129, 0.5); color: #6ee7b7;">USD</span>
       </div>
 
-      <div class="bg-darkcard border border-darkborder rounded-xl p-2.5 flex items-center justify-between shadow-sm">
+      <div class="quote-card">
         <div>
-          <span class="text-[10px] font-mono uppercase text-slate-400 block">1 BTC (BRL)</span>
-          <span id="oneBtcInBrl" class="font-mono text-xs md:text-sm font-semibold text-cyan-400">---</span>
+          <span class="quote-label">1 BTC (BRL)</span>
+          <span id="oneBtcInBrl" class="quote-val" style="color: #38bdf8;">---</span>
         </div>
-        <span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-cyan-950/70 border border-cyan-800/50 text-cyan-300">BRL</span>
+        <span class="quote-badge" style="background-color: rgba(8, 51, 68, 0.7); border-color: rgba(14, 116, 144, 0.5); color: #67e8f9;">BRL</span>
       </div>
 
-      <div class="bg-darkcard border border-darkborder rounded-xl p-2.5 flex items-center justify-between shadow-sm">
+      <div class="quote-card">
         <div>
-          <span class="text-[10px] font-mono uppercase text-slate-400 block">Câmbio USD/BRL</span>
-          <span id="usdToBrl" class="font-mono text-xs md:text-sm font-semibold text-slate-300">---</span>
+          <span class="quote-label">Câmbio USD/BRL</span>
+          <span id="usdToBrl" class="quote-val" style="color: #cbd5e1;">---</span>
         </div>
-        <span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-slate-800 border border-slate-700 text-slate-400">TAXA</span>
+        <span class="quote-badge" style="background-color: #1e293b; border-color: #334155; color: #94a3b8;">TAXA</span>
       </div>
     </div>
 
-    <!-- Lista de Inputs (Reordenada: Dólar -> Real -> Bitcoin -> Satoshi) -->
-    <main class="flex flex-col gap-2">
+    <!-- Lista de Inputs (Ordem: Dólar -> Real -> Bitcoin -> Satoshi) -->
+    <main class="inputs-list">
 
       <!-- 01: Dólar (USD) -->
-      <div class="bg-darkcard border border-darkborder rounded-xl p-2.5 shadow transition hover:border-slate-700 focus-within:border-emerald-500/80">
-        <div class="flex items-center justify-between mb-1.5">
-          <div class="flex items-center gap-2">
-            <span class="w-5 h-5 rounded bg-slate-800 border border-slate-700 flex items-center justify-center text-[10px] font-mono font-bold text-emerald-400">01</span>
-            <label for="usdValue" class="text-xs font-semibold text-slate-200">Dólar Americano (USD)</label>
+      <div class="input-card focus-usd">
+        <div class="input-header">
+          <div class="input-meta">
+            <span class="num-badge" style="color: #34d399;">01</span>
+            <label for="usdValue" class="input-title">Dólar Americano (USD)</label>
           </div>
-          <button class="copy-btn px-2.5 py-0.5 rounded bg-slate-800 hover:bg-emerald-950/60 hover:text-emerald-300 text-slate-300 text-xs font-mono border border-slate-700 flex items-center gap-1 transition active:scale-95" onclick="copyToClipboard('usdValue', this)">
-            <svg class="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+          <button class="btn-copy" onclick="copyToClipboard('usdValue', this)">
+            <svg style="width: 12px; height: 12px; stroke: #34d399; fill: none;" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
             <span>Copiar</span>
           </button>
         </div>
@@ -139,19 +450,20 @@
           id="usdValue" 
           placeholder="$ 0.00" 
           onkeydown="handleTab(event, 'brlValue')" 
-          class="w-full bg-slate-950/80 border border-slate-800 focus:border-emerald-500 text-emerald-400 font-mono text-xs rounded-lg px-2.5 py-1.5 focus:outline-none transition tracking-tight"
+          class="field-input"
+          style="color: #34d399;"
         />
       </div>
 
       <!-- 02: Real (BRL) -->
-      <div class="bg-darkcard border border-darkborder rounded-xl p-2.5 shadow transition hover:border-slate-700 focus-within:border-blue-500/80">
-        <div class="flex items-center justify-between mb-1.5">
-          <div class="flex items-center gap-2">
-            <span class="w-5 h-5 rounded bg-slate-800 border border-slate-700 flex items-center justify-center text-[10px] font-mono font-bold text-blue-400">02</span>
-            <label for="brlValue" class="text-xs font-semibold text-slate-200">Real Brasileiro (BRL)</label>
+      <div class="input-card focus-brl">
+        <div class="input-header">
+          <div class="input-meta">
+            <span class="num-badge" style="color: #60a5fa;">02</span>
+            <label for="brlValue" class="input-title">Real Brasileiro (BRL)</label>
           </div>
-          <button class="copy-btn px-2.5 py-0.5 rounded bg-slate-800 hover:bg-blue-950/60 hover:text-blue-300 text-slate-300 text-xs font-mono border border-slate-700 flex items-center gap-1 transition active:scale-95" onclick="copyToClipboard('brlValue', this)">
-            <svg class="w-3 h-3 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+          <button class="btn-copy" onclick="copyToClipboard('brlValue', this)">
+            <svg style="width: 12px; height: 12px; stroke: #60a5fa; fill: none;" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
             <span>Copiar</span>
           </button>
         </div>
@@ -160,19 +472,20 @@
           id="brlValue" 
           placeholder="R$ 0,00" 
           onkeydown="handleTab(event, 'btcAmount')" 
-          class="w-full bg-slate-950/80 border border-slate-800 focus:border-blue-500 text-blue-300 font-mono text-xs rounded-lg px-2.5 py-1.5 focus:outline-none transition tracking-tight"
+          class="field-input"
+          style="color: #93c5fd;"
         />
       </div>
 
       <!-- 03: Bitcoin (BTC) -->
-      <div class="bg-darkcard border border-darkborder rounded-xl p-2.5 shadow transition hover:border-slate-700 focus-within:border-cyan-500/80">
-        <div class="flex items-center justify-between mb-1.5">
-          <div class="flex items-center gap-2">
-            <span class="w-5 h-5 rounded bg-slate-800 border border-slate-700 flex items-center justify-center text-[10px] font-mono font-bold text-cyan-400">03</span>
-            <label for="btcAmount" class="text-xs font-semibold text-slate-200">Bitcoin (BTC)</label>
+      <div class="input-card focus-btc">
+        <div class="input-header">
+          <div class="input-meta">
+            <span class="num-badge" style="color: #22d3ee;">03</span>
+            <label for="btcAmount" class="input-title">Bitcoin (BTC)</label>
           </div>
-          <button class="copy-btn px-2.5 py-0.5 rounded bg-slate-800 hover:bg-cyan-950/60 hover:text-cyan-300 text-slate-300 text-xs font-mono border border-slate-700 flex items-center gap-1 transition active:scale-95" onclick="copyToClipboard('btcAmount', this)">
-            <svg class="w-3 h-3 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+          <button class="btn-copy" onclick="copyToClipboard('btcAmount', this)">
+            <svg style="width: 12px; height: 12px; stroke: #22d3ee; fill: none;" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
             <span>Copiar</span>
           </button>
         </div>
@@ -181,20 +494,21 @@
           id="btcAmount" 
           placeholder="0.00000000" 
           onkeydown="handleTab(event, 'satoshiAmount')" 
-          class="w-full bg-slate-950/80 border border-slate-800 focus:border-cyan-500 text-cyan-300 font-mono text-xs rounded-lg px-2.5 py-1.5 focus:outline-none transition tracking-tight"
+          class="field-input"
+          style="color: #67e8f9;"
         />
       </div>
 
       <!-- 04: Satoshis (sats) -->
-      <div class="bg-darkcard border border-darkborder rounded-xl p-2.5 shadow transition hover:border-slate-700 focus-within:border-amber-500/80">
-        <div class="flex items-center justify-between mb-1.5">
-          <div class="flex items-center gap-2">
-            <span class="w-5 h-5 rounded bg-slate-800 border border-slate-700 flex items-center justify-center text-[10px] font-mono font-bold text-amber-400">04</span>
-            <label for="satoshiAmount" class="text-xs font-semibold text-slate-200">Satoshis (sats)</label>
-            <span class="px-1.5 py-0.2 rounded text-[10px] font-mono bg-amber-950/80 text-amber-300 border border-amber-800/70">100M = 1 BTC</span>
+      <div class="input-card focus-sats">
+        <div class="input-header">
+          <div class="input-meta">
+            <span class="num-badge" style="color: #fbbf24;">04</span>
+            <label for="satoshiAmount" class="input-title">Satoshis (sats)</label>
+            <span class="badge-aux" style="background-color: rgba(69, 26, 3, 0.8); border-color: rgba(180, 83, 9, 0.7); color: #fcd34d;">100M = 1 BTC</span>
           </div>
-          <button class="copy-btn px-2.5 py-0.5 rounded bg-slate-800 hover:bg-amber-950/60 hover:text-amber-300 text-slate-300 text-xs font-mono border border-slate-700 flex items-center gap-1 transition active:scale-95" onclick="copyToClipboard('satoshiAmount', this)">
-            <svg class="w-3 h-3 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+          <button class="btn-copy" onclick="copyToClipboard('satoshiAmount', this)">
+            <svg style="width: 12px; height: 12px; stroke: #fbbf24; fill: none;" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
             <span>Copiar</span>
           </button>
         </div>
@@ -203,20 +517,21 @@
           id="satoshiAmount" 
           placeholder="0" 
           onkeydown="handleTab(event, 'usdValue')" 
-          class="w-full bg-slate-950/80 border border-slate-800 focus:border-amber-500 text-amber-300 font-mono text-xs rounded-lg px-2.5 py-1.5 focus:outline-none transition tracking-tight"
+          class="field-input"
+          style="color: #fcd34d;"
         />
       </div>
 
     </main>
 
     <!-- Rodapé -->
-    <footer class="text-center text-[11px] text-slate-500 py-2 flex flex-col sm:flex-row items-center justify-between gap-1 border-t border-slate-900 mt-1">
-      <div class="flex items-center gap-2">
-        <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+    <footer class="footer">
+      <div class="footer-left">
+        <span class="footer-dot"></span>
         <span id="lastUpdated">Pronto para conversão</span>
       </div>
       <div>
-        Navegação por <kbd class="px-1 py-0.2 bg-slate-800 border border-slate-700 rounded text-amber-400 font-mono text-[9px]">Tab</kbd> ativa
+        Navegação por <kbd>Tab</kbd> ativa
       </div>
     </footer>
   </div>
@@ -242,14 +557,14 @@
 
     async function updatePrices() {
       const refreshIcon = document.getElementById('refreshIcon');
-      refreshIcon.classList.add('animate-spin');
+      refreshIcon.classList.add('spin');
 
       document.getElementById('oneBtcInBrl').textContent = "Atualizando...";
       document.getElementById('oneBtcInUsd').textContent = "Atualizando...";
       document.getElementById('usdToBrl').textContent = "Atualizando...";
 
       const prices = await fetchPrices();
-      refreshIcon.classList.remove('animate-spin');
+      refreshIcon.classList.remove('spin');
 
       if (prices) {
         btcPriceInBRL = prices.btcInBRL;
@@ -353,7 +668,6 @@
         const nextElement = document.getElementById(nextElementId);
         if (nextElement) {
           nextElement.focus();
-          nextElement.select();
         }
       }
     }
@@ -374,20 +688,22 @@
         if (btnElement) {
           const originalContent = btnElement.innerHTML;
           btnElement.innerHTML = `
-            <svg class="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-            <span class="text-emerald-400 font-semibold text-[11px]">Copiado!</span>
+            <svg style="width: 12px; height: 12px; stroke: #34d399; fill: none;" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            <span style="color: #34d399; font-weight: 600; font-size: 11px;">Copiado!</span>
           `;
-          btnElement.classList.add("border-emerald-700", "bg-emerald-950/40");
+          btnElement.style.borderColor = '#047857';
+          btnElement.style.backgroundColor = 'rgba(6, 78, 59, 0.4)';
 
           setTimeout(() => {
             btnElement.innerHTML = originalContent;
-            btnElement.classList.remove("border-emerald-700", "bg-emerald-950/40");
+            btnElement.style.borderColor = '';
+            btnElement.style.backgroundColor = '';
           }, 1200);
         }
 
-        element.classList.add("ring-1", "ring-emerald-500/50");
+        element.style.borderColor = '#10b981';
         setTimeout(() => {
-          element.classList.remove("ring-1", "ring-emerald-500/50");
+          element.style.borderColor = '';
         }, 300);
 
       } catch (err) {
