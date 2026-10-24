@@ -449,7 +449,7 @@
     }
   </style>
 </head>
-<body>
+<body onclick="unlockAudioContext()">
 
   <div class="container">
     
@@ -473,6 +473,14 @@
           <span id="statusDot" class="status-dot"></span>
           <span id="statusText">Verificando...</span>
         </div>
+
+        <button onclick="testSynthesizerAudio()" title="Testar sirene sintetizada" class="btn-test">
+          <svg style="width: 14px; height: 14px; stroke: #38bdf8; fill: none;" viewBox="0 0 24 24">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+            <path d="M15.54 8.46a5 5 0 0 1 0 7.07m3.54-10.61a9 9 0 0 1 0 14.14" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+          </svg>
+          <span>Testar Som</span>
+        </button>
 
         <button onclick="runSpeedTest()" title="Forçar teste imediato" class="btn-test">
           <svg id="refreshIcon" style="width: 14px; height: 14px; stroke: #22d3ee; fill: none;" viewBox="0 0 24 24">
@@ -517,7 +525,7 @@
         <span class="alarm-icon-badge">🚨</span>
         <div>
           <span class="alarm-title">Alerta de Persistência de IP</span>
-          <span class="alarm-sub">Dispara sinal sonoro se o IP não renovar dentro do limite</span>
+          <span class="alarm-sub">Dispara sinal sonoro sintetizado se o IP não renovar dentro do limite</span>
         </div>
       </div>
 
@@ -567,12 +575,10 @@
         <span>Intervalo do ciclo: 60s | Duração máx alarme: 60min</span>
       </div>
       <div>
-        Sonda HTTP/RTT ativa via Web Client
+        Sonda HTTP/RTT ativa via Web Client • Áudio Nativo
       </div>
     </footer>
   </div>
-
-  <audio id="alarm-sound" src="alarme.mp3" loop preload="auto"></audio>
 
   <script>
     const TEST_INTERVAL = 60000;
@@ -589,7 +595,6 @@
     const speedLogEl = document.getElementById('speed-log');
     const ipThresholdInput = document.getElementById('ip-threshold');
     const stopAlarmBtn = document.getElementById('stop-alarm-btn');
-    const alarmSound = document.getElementById('alarm-sound');
     const alarmStatusDot = document.getElementById('alarmStatusDot');
     const alarmCard = document.getElementById('alarmCard');
     const refreshIcon = document.getElementById('refreshIcon');
@@ -600,6 +605,81 @@
     let alarmTimeoutId = null;
     let previousIP = null;
 
+    // --- SINTETIZADOR DE ÁUDIO NATIVO (Web Audio API) ---
+    let audioCtx = null;
+    let sirenIntervalId = null;
+
+    function getAudioContext() {
+      try {
+        if (!audioCtx) {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if (AudioContextClass) audioCtx = new AudioContextClass();
+        }
+        if (audioCtx && audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+      } catch (err) {
+        console.warn('Erro ao inicializar AudioContext:', err);
+      }
+      return audioCtx;
+    }
+
+    function unlockAudioContext() {
+      getAudioContext();
+    }
+
+    function playTone(freq, type = 'sine', duration = 0.25) {
+      const ctx = getAudioContext();
+      if (!ctx) return;
+      try {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, ctx.currentTime);
+
+        gain.gain.setValueAtTime(0.001, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.2, ctx.currentTime + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + duration + 0.05);
+      } catch (err) {
+        console.warn('Erro ao emitir tom:', err);
+      }
+    }
+
+    function startSiren() {
+      if (sirenIntervalId) return;
+      let toggle = false;
+      
+      // Tom inicial imediato
+      playTone(850, 'sawtooth', 0.22);
+      
+      sirenIntervalId = setInterval(() => {
+        toggle = !toggle;
+        playTone(toggle ? 950 : 650, 'sawtooth', 0.25);
+      }, 350);
+    }
+
+    function stopSiren() {
+      if (sirenIntervalId) {
+        clearInterval(sirenIntervalId);
+        sirenIntervalId = null;
+      }
+    }
+
+    function testSynthesizerAudio() {
+      getAudioContext();
+      playTone(880, 'sine', 0.15);
+      setTimeout(() => playTone(1174, 'sine', 0.25), 160);
+      addLog(`🔊 <strong>TESTE DE SOM:</strong> Tom de teste emitido com sucesso via Web Audio API.`, 'change');
+    }
+
+    // --- FORMATAÇÃO DE LOGS ---
     const formatTime = (date) => date.toLocaleTimeString('pt-BR');
 
     const addLog = (message, type = 'info') => {
@@ -627,6 +707,7 @@
       speedLogInitialized = false;
     }
 
+    // --- ALARME DE PERSISTÊNCIA ---
     const startAlarm = (ip) => {
       if (isAlarmActive) return;
       isAlarmActive = true;
@@ -636,10 +717,7 @@
       alarmStatusDot.style.backgroundColor = "#ffffff";
       alarmCard.className = "alarm-card active";
 
-      alarmSound.play().catch(error => {
-        console.error("Erro ao reproduzir áudio:", error);
-        addLog(`🔇 <strong style="color: #fbbf24;">FALHA NO ÁUDIO:</strong> O navegador bloqueou o áudio automático.`, 'alarm');
-      });
+      startSiren();
 
       addLog(`🚨 <strong>ALERTA DISPARADO:</strong> O IP ${ip} atingiu ${ipThresholdInput.value} ocorrências consecutivas.`, 'alarm');
       alarmTimeoutId = setTimeout(() => stopAlarm(true), ALARM_DURATION);
@@ -647,8 +725,8 @@
 
     const stopAlarm = (isAutoStop = false) => {
       if (!isAlarmActive) return;
-      alarmSound.pause();
-      alarmSound.currentTime = 0;
+      
+      stopSiren();
       
       stopAlarmBtn.disabled = true;
       stopAlarmBtn.className = "btn-stop-alarm";
@@ -666,6 +744,7 @@
 
     stopAlarmBtn.addEventListener('click', () => stopAlarm(false));
 
+    // --- CONEXÃO E RESOLUÇÃO DE IP ---
     const updateStatus = () => {
       const online = navigator.onLine;
       if (online) {
